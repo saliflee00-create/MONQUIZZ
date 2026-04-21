@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUEL QUIZ 1v1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0a0f;
+    --bg2:#0f0f1a;
+    --bg3:#141428;
+    --card:#16162a;
+    --card2:#1a1a30;
+    --border:#2a2a4a;
+    --accent:#7c3aed;
+    --accent2:#06b6d4;
+    --gold:#f59e0b;
+    --red:#ef4444;
+    --green:#10b981;
+    --text:#e2e8f0;
+    --muted:#64748b;
+    --p1:#7c3aed;
+    --p2:#06b6d4;
+    --glow1:rgba(124,58,237,.4);
+    --glow2:rgba(6,182,212,.4);
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  .screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+  .screen.active{display:flex}
+
+  /* Animated background */
+  body::before{
+    content:'';
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:radial-gradient(ellipse at 20% 50%,rgba(124,58,237,.08) 0%,transparent 60%),
+               radial-gradient(ellipse at 80% 50%,rgba(6,182,212,.08) 0%,transparent 60%);
+    pointer-events:none;z-index:0;
+  }
+
+  .z1{position:relative;z-index:1;width:100%}
+
+  /* LOGO */
+  .logo{
+    font-family:'Orbitron',monospace;
+    font-size:clamp(28px,5vw,52px);
+    font-weight:900;
+    text-align:center;
+    letter-spacing:2px;
+    margin-bottom:8px;
+  }
+  .logo span.p{color:var(--p1);text-shadow:0 0 20px var(--glow1)}
+  .logo span.v{color:var(--text);margin:0 8px}
+  .logo span.c{color:var(--p2);text-shadow:0 0 20px var(--glow2)}
+  .tagline{text-align:center;color:var(--muted);font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:40px}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;border-radius:10px;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;font-size:15px;font-weight:600;
+    transition:all .2s;letter-spacing:.3px;
+  }
+  .btn-primary{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.35)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(124,58,237,.5)}
+  .btn-secondary{background:linear-gradient(135deg,#0891b2,#06b6d4);color:#fff;box-shadow:0 4px 20px rgba(6,182,212,.35)}
+  .btn-secondary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(6,182,212,.5)}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
+  .btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:700}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(245,158,11,.4)}
+  .btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff}
+  .btn-danger:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(239,68,68,.35)}
+  .btn-sm{padding:9px 18px;font-size:13px;border-radius:7px}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
+  .card-glow-p1{border-color:rgba(124,58,237,.4);box-shadow:0 0 30px rgba(124,58,237,.1)}
+  .card-glow-p2{border-color:rgba(6,182,212,.4);box-shadow:0 0 30px rgba(6,182,212,.1)}
+
+  /* Avatar selector */
+  .avatar-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+  .avatar-opt{
+    width:52px;height:52px;border-radius:50%;border:2px solid var(--border);
+    cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;
+    transition:all .2s;background:var(--bg2);
+  }
+  .avatar-opt:hover,.avatar-opt.selected{border-color:var(--accent);transform:scale(1.1);background:rgba(124,58,237,.15)}
+  .avatar-opt.sel2{border-color:var(--p2);background:rgba(6,182,212,.15)}
+
+  /* Input */
+  .field{
+    background:var(--bg2);border:1px solid var(--border);border-radius:9px;
+    padding:12px 16px;color:var(--text);font-size:15px;width:100%;font-family:'Inter',sans-serif;
+    outline:none;transition:border-color .2s;
+  }
+  .field:focus{border-color:var(--accent)}
+  .field-p2:focus{border-color:var(--p2)}
+  .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+
+  /* Setup screen */
+  .setup-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:start;width:100%;max-width:800px;margin-top:20px}
+  .vs-divider{
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px 0;
+    font-family:'Orbitron',monospace;font-size:28px;font-weight:900;
+    color:var(--gold);text-shadow:0 0 20px rgba(245,158,11,.5);
+  }
+
+  /* Theme selector */
+  .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:12px 0}
+  .theme-opt{
+    background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+    padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;
+    font-size:13px;font-weight:500;
+  }
+  .theme-opt:hover{border-color:var(--accent);background:rgba(124,58,237,.1)}
+  .theme-opt.selected{border-color:var(--accent);background:rgba(124,58,237,.15);color:#a78bfa}
+  .theme-icon{font-size:22px;margin-bottom:6px}
+
+  /* GAME SCREEN */
+  .game-header{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    width:100%;max-width:900px;margin-bottom:20px;
+  }
+  .player-hud{
+    display:flex;align-items:center;gap:10px;flex:1;
+    background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;
+    transition:all .3s;
+  }
+  .player-hud.active-p1{border-color:var(--p1);box-shadow:0 0 20px rgba(124,58,237,.25)}
+  .player-hud.active-p2{border-color:var(--p2);box-shadow:0 0 20px rgba(6,182,212,.25)}
+  .player-hud.p2{flex-direction:row-reverse}
+  .hud-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .hud-avatar.c1{background:rgba(124,58,237,.2);border:2px solid var(--p1)}
+  .hud-avatar.c2{background:rgba(6,182,212,.2);border:2px solid var(--p2)}
+  .hud-info{flex:1;min-width:0}
+  .hud-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hud-score{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;line-height:1}
+  .hud-score.c1{color:var(--p1)}
+  .hud-score.c2{color:var(--p2)}
+  .hud-info.r{text-align:right}
+
+  /* Timer */
+  .timer-wrap{
+    width:70px;height:70px;flex-shrink:0;position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .timer-svg{transform:rotate(-90deg);width:70px;height:70px}
+  .timer-bg{fill:none;stroke:var(--border);stroke-width:4}
+  .timer-arc{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .1s linear,stroke .3s}
+  .timer-num{
+    position:absolute;font-family:'Orbitron',monospace;font-weight:700;font-size:18px;
+    color:var(--text);top:50%;left:50%;transform:translate(-50%,-50%);
+  }
+
+  /* Progress bar */
+  .progress-bar-wrap{width:100%;max-width:900px;margin-bottom:12px}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .progress-track{height:4px;background:var(--border);border-radius:4px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p1),var(--p2));transition:width .5s}
+
+  /* Theme badge */
+  .theme-badge{
+    display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);
+    border-radius:20px;padding:5px 12px;font-size:12px;color:var(--muted);margin-bottom:12px;
+  }
+
+  /* Question card */
+  .q-card{
+    width:100%;max-width:900px;background:var(--card);border:1px solid var(--border);
+    border-radius:18px;padding:28px;margin-bottom:16px;
+    transition:border-color .3s;
+  }
+  .q-num{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .q-text{font-size:clamp(15px,2.5vw,20px);font-weight:500;line-height:1.5;color:var(--text)}
+  .q-turn-badge{
+    display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+    border-radius:20px;font-size:11px;font-weight:600;margin-bottom:10px;
+    text-transform:uppercase;letter-spacing:.5px;
+  }
+  .q-turn-badge.t1{background:rgba(124,58,237,.2);color:#a78bfa;border:1px solid rgba(124,58,237,.3)}
+  .q-turn-badge.t2{background:rgba(6,182,212,.2);color:#67e8f9;border:1px solid rgba(6,182,212,.3)}
+
+  /* Answers */
+  .answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:900px}
+  .ans-btn{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;text-align:left;cursor:pointer;color:var(--text);
+    font-size:14px;font-family:'Inter',sans-serif;font-weight:500;line-height:1.4;
+    transition:all .2s;display:flex;align-items:center;gap:10px;
+  }
+  .ans-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,58,237,.08);transform:translateX(3px)}
+  .ans-btn:disabled{cursor:default}
+  .ans-btn.correct{background:rgba(16,185,129,.12);border-color:#10b981;color:#6ee7b7}
+  .ans-btn.wrong{background:rgba(239,68,68,.12);border-color:#ef4444;color:#fca5a5}
+  .ans-letter{
+    width:28px;height:28px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;
+    font-family:'Orbitron',monospace;
+  }
+
+  /* Feedback overlay */
+  .feedback-panel{
+    width:100%;max-width:900px;background:var(--card2);border:1px solid var(--border);
+    border-radius:16px;padding:20px;margin-top:10px;
+    display:none;align-items:flex-start;gap:16px;
+  }
+  .feedback-panel.show{display:flex}
+  .feedback-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .feedback-icon.ok{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3)}
+  .feedback-icon.ko{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3)}
+  .feedback-text h4{font-size:14px;font-weight:600;margin-bottom:4px}
+  .feedback-text p{font-size:13px;color:var(--muted);line-height:1.5}
+  .points-earned{
+    margin-left:auto;text-align:right;flex-shrink:0;
+    font-family:'Orbitron',monospace;font-weight:700;font-size:18px;color:var(--gold);
+  }
+  .pts-label{font-size:11px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:400}
+
+  /* ROUND END */
+  .round-card{width:100%;max-width:700px}
+  .round-players{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin:24px 0}
+  .round-player-box{background:var(--bg2);border-radius:14px;padding:20px;text-align:center;border:1px solid var(--border)}
+  .round-player-box.winner{border-color:var(--gold);background:rgba(245,158,11,.08)}
+  .round-player-box.p1-b{border-color:rgba(124,58,237,.35)}
+  .round-player-box.p2-b{border-color:rgba(6,182,212,.35)}
+  .round-avatar{font-size:36px;margin-bottom:8px}
+  .round-score{font-family:'Orbitron',monospace;font-size:32px;font-weight:900}
+  .round-score.c1{color:var(--p1)}
+  .round-score.c2{color:var(--p2)}
+  .round-stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .stat-pill{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px}
+  .vs-round{font-size:24px;font-family:'Orbitron',monospace;font-weight:900;color:var(--gold);text-align:center}
+
+  /* FINAL SCREEN */
+  .final-card{width:100%;max-width:750px}
+  .champion-zone{
+    text-align:center;padding:32px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(124,58,237,.08));
+    border:1px solid rgba(245,158,11,.3);border-radius:18px;margin:20px 0;
+    position:relative;overflow:hidden;
+  }
+  .champion-zone::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at center,rgba(245,158,11,.06) 0%,transparent 70%);
+  }
+  .crown{font-size:52px;display:block;margin-bottom:8px}
+  .champion-name{font-family:'Orbitron',monospace;font-size:clamp(22px,4vw,36px);font-weight:900;color:var(--gold);letter-spacing:2px}
+  .champion-score{font-family:'Orbitron',monospace;font-size:22px;color:var(--text);margin-top:4px;opacity:.8}
+  .final-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .final-player-card{background:var(--bg2);border-radius:14px;padding:18px;text-align:center;border:1px solid var(--border)}
+  .final-player-card.winner{border-color:var(--gold)}
+  .final-score-big{font-family:'Orbitron',monospace;font-size:36px;font-weight:900}
+  .final-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
+
+  /* Leaderboard */
+  .lb-table{width:100%;border-collapse:collapse}
+  .lb-table th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .lb-table td{padding:12px 12px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.04)}
+  .lb-table tr:hover td{background:rgba(255,255,255,.02)}
+  .rank-badge{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Orbitron',monospace}
+  .rank-1{background:var(--gold);color:#000}
+  .rank-2{background:#9ca3af;color:#000}
+  .rank-3{background:#cd7c2f;color:#000}
+  .rank-n{background:var(--bg2);color:var(--muted);border:1px solid var(--border)}
+
+  /* Notifications */
+  .notif{
+    position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);
+    background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:10px 20px;font-size:14px;font-weight:500;z-index:100;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+    white-space:nowrap;
+  }
+  .notif.show{transform:translateX(-50%) translateY(0)}
+
+  /* Pulse animation for active player */
+  @keyframes pulse-glow{0%,100%{opacity:1}50%{opacity:.6}}
+  .active-indicator{
+    width:8px;height:8px;border-radius:50%;background:var(--green);
+    animation:pulse-glow 1.5s ease-in-out infinite;
+  }
+
+  /* Scale-in anim */
+  @keyframes scale-in{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .scale-in{animation:scale-in .3s cubic-bezier(.34,1.56,.64,1) both}
+
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  .shake{animation:shake .4s ease both}
+
+  @keyframes bounce-in{from{transform:scale(0) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+  .bounce-in{animation:bounce-in .4s cubic-bezier(.34,1.56,.64,1) both}
+
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+  /* Responsive */
+  @media(max-width:600px){
+    .setup-grid{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+    .vs-divider{flex-direction:row;padding:10px 0;font-size:20px}
+    .answers-grid{grid-template-columns:1fr}
+    .game-header{gap:8px}
+    .hud-score{font-size:18px}
+    .final-grid{grid-template-columns:1fr}
+    .round-players{grid-template-columns:1fr auto 1fr}
+    .final-actions{flex-direction:column;align-items:center}
+    .theme-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  /* Mode cards */
+  .mode-cards{display:flex;gap:16px;margin:20px 0;flex-wrap:wrap;justify-content:center}
+  .mode-card{
+    flex:1;min-width:180px;max-width:240px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:22px 18px;text-align:center;cursor:pointer;transition:all .2s;
+  }
+  .mode-card:hover{border-color:var(--accent);transform:translateY(-4px);background:rgba(124,58,237,.08)}
+  .mode-card.selected{border-color:var(--accent);background:rgba(124,58,237,.1)}
+  .mode-icon{font-size:32px;margin-bottom:10px}
+  .mode-title{font-weight:600;font-size:15px;margin-bottom:4px}
+  .mode-desc{font-size:12px;color:var(--muted)}
+
+  /* Number counter anim */
+  .counter{transition:all .4s}
+
+  /* Confetti dots */
+  .confetti-dot{position:fixed;pointer-events:none;border-radius:50%;z-index:200;animation:fall 1.5s ease-in forwards}
+  @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+  /* Turn transition */
+  .turn-transition{
+    position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:150;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .turn-transition.active{display:flex}
+  .turn-title{font-family:'Orbitron',monospace;font-size:clamp(24px,5vw,48px);font-weight:900;margin-bottom:16px}
+  .turn-countdown{font-family:'Orbitron',monospace;font-size:80px;font-weight:900;color:var(--gold);line-height:1}
+</style>
+</head>
+<body>
+
+<!-- SCREENS -->
+
+<!-- HOME -->
+<div class="screen active z1" id="screen-home">
+  <div style="width:100%;max-width:700px">
+    <div class="logo"><span class="p">DUEL</span><span class="v">⚡</span><span class="c">QUIZ</span></div>
+    <div class="tagline">1v1 · Stratégie · Compétition · Excellence</div>
+
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:28px;flex-wrap:wrap">
+      <div style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);border-radius:20px;padding:5px 14px;font-size:12px;color:#a78bfa">⚡ 300+ Questions</div>
+      <div style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);border-radius:20px;padding:5px 14px;font-size:12px;color:#67e8f9">🎯 15 Thèmes</div>
+      <div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:20px;padding:5px 14px;font-size:12px;color:#fbbf24">🏆 Mode Duel</div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;text-align:center">Choisir un mode</div>
+      <div class="mode-cards">
+        <div class="mode-card selected" onclick="selectMode('local')" id="mode-local">
+          <div class="mode-icon">🖥️</div>
+          <div class="mode-title">Mode Local</div>
+          <div class="mode-desc">2 joueurs, même appareil</div>
+        </div>
+        <div class="mode-card" onclick="selectMode('sim')" id="mode-sim">
+          <div class="mode-icon">🌐</div>
+          <div class="mode-title">Mode Duel IA</div>
+          <div class="mode-desc">Affrontez un adversaire simulé</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="gotoSetup()" style="min-width:160px">⚔️ Jouer</button>
+      <button class="btn btn-outline" onclick="gotoLeaderboard()" style="min-width:140px">🏆 Classement</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen z1" id="screen-setup">
+  <div style="width:100%;max-width:860px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div class="logo" style="font-size:clamp(22px,4vw,38px);margin-bottom:6px">Configuration du Duel</div>
+      <p style="color:var(--muted);font-size:13px">Personnalisez votre arena</p>
+    </div>
+
+    <div class="setup-grid">
+      <!-- Player 1 -->
+      <div class="card card-glow-p1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--p1);box-shadow:0 0 8px var(--glow1)"></div>
+          <span style="font-weight:600;font-size:13px;color:#a78bfa;text-transform:uppercase;letter-spacing:1px">Joueur 1</span>
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="label">Pseudo</div>
+          <input class="field" id="p1name" placeholder="Pseudo J1" value="Joueur 1">
+        </div>
+        <div>
+          <div class="label">Avatar</div>
+          <div class="avatar-grid" id="av1grid"></div>
+        </div>
+      </div>
+
+      <!-- VS -->
+      <div class="vs-divider">
+        <div style="width:2px;height:40px;background:linear-gradient(to bottom,var(--p1),var(--gold))"></div>
+        VS
+        <div style="width:2px;height:40px;background:linear-gradient(to bottom,var(--gold),var(--p2))"></div>
+      </div>
+
+      <!-- Player 2 -->
+      <div class="card card-glow-p2">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;justify-content:flex-end">
+          <span style="font-weight:600;font-size:13px;color:#67e8f9;text-transform:uppercase;letter-spacing:1px">Joueur 2</span>
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--p2);box-shadow:0 0 8px var(--glow2)"></div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="label">Pseudo</div>
+          <input class="field field-p2" id="p2name" placeholder="Pseudo J2" value="Joueur 2">
+        </div>
+        <div>
+          <div class="label">Avatar</div>
+          <div class="avatar-grid" id="av2grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme selection -->
+    <div class="card" style="margin-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-weight:600;font-size:15px">Sélection des thèmes</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm btn-outline" onclick="selectAllThemes()">Tous</button>
+          <button class="btn btn-sm btn-outline" onclick="clearThemes()">Aucun</button>
+          <button class="btn btn-sm btn-outline" onclick="randomThemes()">🎲 Aléatoire</button>
+        </div>
+      </div>
+      <div class="theme-grid" id="themeGrid"></div>
+      <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:10px" id="themeCount">0 thème(s) sélectionné(s)</div>
+    </div>
+
+    <!-- Questions config -->
+    <div class="card" style="margin-top:16px">
+      <div style="font-weight:600;font-size:15px;margin-bottom:14px">Configuration</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div class="label">Questions par thème</div>
+          <select class="field" id="qPerTheme">
+            <option value="5">5 questions</option>
+            <option value="8" selected>8 questions</option>
+            <option value="10">10 questions</option>
+            <option value="15">15 questions</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">Timer</div>
+          <select class="field" id="timerSel">
+            <option value="10">10 secondes</option>
+            <option value="15" selected>15 secondes</option>
+            <option value="20">20 secondes</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="gotoHome()">← Retour</button>
+      <button class="btn btn-gold" onclick="startGame()" style="min-width:180px">⚔️ Lancer le Duel !</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen z1" id="screen-game">
+  <div style="width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center">
+
+    <!-- Header HUD -->
+    <div class="game-header">
+      <div class="player-hud" id="hud1">
+        <div class="hud-avatar c1" id="hud1av">🦁</div>
+        <div class="hud-info">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="hud-name" id="hud1name">J1</div>
+            <div class="active-indicator" id="ind1" style="display:none"></div>
+          </div>
+          <div class="hud-score c1" id="hud1score">0</div>
+        </div>
+      </div>
+
+      <div class="timer-wrap" id="timerWrap">
+        <svg class="timer-svg" viewBox="0 0 70 70">
+          <circle class="timer-bg" cx="35" cy="35" r="30"/>
+          <circle class="timer-arc" id="timerArc" cx="35" cy="35" r="30" stroke="#7c3aed"
+            stroke-dasharray="188.5" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timerNum">15</div>
+      </div>
+
+      <div class="player-hud p2" id="hud2">
+        <div class="hud-avatar c2" id="hud2av">🦊</div>
+        <div class="hud-info r">
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+            <div class="active-indicator" id="ind2" style="display:none"></div>
+            <div class="hud-name" id="hud2name">J2</div>
+          </div>
+          <div class="hud-score c2" id="hud2score">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span id="progressLabel">Question 1/8</span>
+        <span id="themeName">Thème</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+
+    <!-- Turn badge -->
+    <div style="margin-bottom:10px" id="turnBadgeWrap">
+      <div class="q-turn-badge t1" id="turnBadge">🎮 Tour de J1</div>
+    </div>
+
+    <!-- Question -->
+    <div class="q-card" id="qCard">
+      <div class="q-num" id="qNum">Question 1 sur 8</div>
+      <div class="q-text" id="qText">Chargement...</div>
+    </div>
+
+    <!-- Answers -->
+    <div class="answers-grid" id="answersGrid"></div>
+
+    <!-- Feedback -->
+    <div class="feedback-panel" id="feedbackPanel">
+      <div class="feedback-icon ok" id="feedbackIcon">✓</div>
+      <div class="feedback-text">
+        <h4 id="feedbackTitle">Bonne réponse !</h4>
+        <p id="feedbackDesc">Explication...</p>
+      </div>
+      <div class="points-earned" id="pointsEarned">
+        <div>+120</div>
+        <div class="pts-label">points</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ROUND END -->
+<div class="screen z1" id="screen-round">
+  <div class="round-card card scale-in">
+    <div style="text-align:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Résultats du thème</span>
+    </div>
+    <h2 style="text-align:center;font-family:'Orbitron',monospace;font-size:18px;margin-bottom:4px" id="roundThemeName">Thème</h2>
+    <div class="round-players">
+      <div class="round-player-box p1-b" id="roundBox1">
+        <div class="round-avatar" id="roundAv1">🦁</div>
+        <div style="font-weight:600;margin-bottom:8px" id="roundName1">J1</div>
+        <div class="round-score c1" id="roundScore1">0</div>
+        <div class="round-stats" id="roundStats1"></div>
+      </div>
+      <div class="vs-round">VS</div>
+      <div class="round-player-box p2-b" id="roundBox2">
+        <div class="round-avatar" id="roundAv2">🦊</div>
+        <div style="font-weight:600;margin-bottom:8px" id="roundName2">J2</div>
+        <div class="round-score c2" id="roundScore2">0</div>
+        <div class="round-stats" id="roundStats2"></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin:16px 0" id="roundWinnerBanner"></div>
+    <div style="text-align:center;margin-top:8px;color:var(--muted);font-size:13px" id="roundNextInfo"></div>
+    <div style="display:flex;justify-content:center;margin-top:20px">
+      <button class="btn btn-primary" onclick="nextRound()" id="roundNextBtn">Prochain thème →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div class="screen z1" id="screen-final">
+  <div class="final-card card scale-in">
+    <div style="text-align:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:2px;font-family:'Orbitron',monospace">⚡ Duel terminé ⚡</span>
+    </div>
+    <div class="champion-zone" id="championZone">
+      <span class="crown">👑</span>
+      <div class="champion-name" id="championName">JOUEUR 1</div>
+      <div class="champion-score" id="championScore">1200 pts</div>
+      <div style="margin-top:8px;font-size:13px;color:var(--gold);opacity:.7">MVP du Match</div>
+    </div>
+    <div class="final-grid">
+      <div class="final-player-card" id="finalCard1">
+        <div style="font-size:32px;margin-bottom:8px" id="finalAv1">🦁</div>
+        <div style="font-weight:600;margin-bottom:10px" id="finalName1">J1</div>
+        <div class="final-score-big c1" id="finalScore1">0</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">Score total</div>
+        <div style="margin-top:10px;font-size:13px" id="finalStats1"></div>
+      </div>
+      <div class="final-player-card" id="finalCard2">
+        <div style="font-size:32px;margin-bottom:8px" id="finalAv2">🦊</div>
+        <div style="font-weight:600;margin-bottom:10px" id="finalName2">J2</div>
+        <div class="final-score-big c2" id="finalScore2">0</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">Score total</div>
+        <div style="margin-top:10px;font-size:13px" id="finalStats2"></div>
+      </div>
+    </div>
+    <div class="final-actions">
+      <button class="btn btn-gold" onclick="rematch()">🔥 Revanche</button>
+      <button class="btn btn-primary" onclick="gotoSetup()">🔄 Nouveau Duel</button>
+      <button class="btn btn-outline" onclick="gotoLeaderboard()">🏆 Classement</button>
+      <button class="btn btn-outline btn-sm" onclick="gotoHome()">🏠 Accueil</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="screen z1" id="screen-lb">
+  <div style="width:100%;max-width:700px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="logo" style="font-size:clamp(20px,4vw,34px);margin-bottom:6px">🏆 Classement</div>
+      <p style="color:var(--muted);font-size:13px">Meilleurs scores locaux</p>
+    </div>
+    <div class="card">
+      <table class="lb-table" id="lbTable">
+        <thead><tr><th>#</th><th>Joueur</th><th>Score</th><th>Victoires</th><th>Date</th></tr></thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+      <div id="lbEmpty" style="text-align:center;color:var(--muted);padding:32px;display:none">Aucun duel joué encore — lancez-vous !</div>
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <button class="btn btn-outline" onclick="gotoHome()">← Retour</button>
+    </div>
+  </div>
+</div>
+
+<!-- Turn transition overlay -->
+<div class="turn-transition" id="turnOverlay">
+  <div style="font-size:40px;margin-bottom:12px" id="overlayAv">🦁</div>
+  <div class="turn-title" id="overlayTitle" style="color:var(--p1)">Tour de J1</div>
+  <div style="color:var(--muted);font-size:14px;margin-bottom:24px">Préparez-vous !</div>
+  <div class="turn-countdown" id="overlayCount">3</div>
+</div>
+
+<!-- Notification -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ==================== DATA ====================
+
+const AVATARS = ['🦁','🐯','🦊','🐺','🦅','🐉','🦈','🤖','👾','🎭','🔥','⚡','💎','🌟','🏆'];
+
+const THEMES = [
+  {id:'culture',name:'Culture Générale',icon:'🌍'},
+  {id:'tech',name:'Technologie',icon:'💻'},
+  {id:'anime',name:'Anime / Manga',icon:'⛩️'},
+  {id:'foot',name:'Football / Sport',icon:'⚽'},
+  {id:'histoire',name:'Histoire',icon:'📜'},
+  {id:'cinema',name:'Cinéma / Séries',icon:'🎬'},
+  {id:'jeux',name:'Jeux Vidéo',icon:'🎮'},
+  {id:'musique',name:'Musique',icon:'🎵'},
+  {id:'geo',name:'Géographie',icon:'🗺️'},
+  {id:'science',name:'Sciences',icon:'🔬'},
+  {id:'celeb',name:'Personnalités',icon:'⭐'},
+  {id:'mytho',name:'Mythologie',icon:'⚡'},
+  {id:'internet',name:'Internet / Réseaux',icon:'📱'},
+  {id:'business',name:'Business',icon:'💼'},
+  {id:'mode',name:'Mode / Luxe',icon:'👗'},
+];
+
+const QUESTIONS = {
+culture:[
+  {q:"Quelle est la capitale de l'Australie ?",a:["Canberra","Sydney","Melbourne","Brisbane"],c:0,exp:"Canberra est la capitale fédérale de l'Australie depuis 1927, choisie comme compromis entre Sydney et Melbourne."},
+  {q:"Combien de côtés possède un hexagone ?",a:["5","6","7","8"],c:1,exp:"Un hexagone est un polygone à 6 côtés. La forme hexagonale se retrouve naturellement dans les alvéoles des abeilles."},
+  {q:"Quel est le pays le plus grand du monde ?",a:["Canada","Chine","États-Unis","Russie"],c:3,exp:"La Russie couvre 17,1 millions de km², soit presque le double du Canada qui est 2ème."},
+  {q:"Quel est l'élément chimique symbolisé par 'Au' ?",a:["Argent","Cuivre","Or","Aluminium"],c:2,exp:"Au vient du latin 'Aurum'. L'or est l'un des rares métaux à exister à l'état natif dans la nature."},
+  {q:"Quelle est la plus haute montagne du monde ?",a:["K2","Mont Blanc","Everest","Kilimandjaro"],c:2,exp:"L'Everest culmine à 8 848 m. Il a été gravi pour la première fois par Edmund Hillary et Tenzing Norgay en 1953."},
+  {q:"Qui a peint la Joconde ?",a:["Picasso","Michel-Ange","Léonard de Vinci","Raphaël"],c:2,exp:"Léonard de Vinci a peint la Joconde entre 1503 et 1519. Elle est exposée au Musée du Louvre à Paris."},
+  {q:"Quelle langue compte le plus de locuteurs natifs ?",a:["Anglais","Espagnol","Hindi","Mandarin"],c:3,exp:"Le mandarin est parlé par environ 920 millions de personnes comme langue maternelle."},
+  {q:"En quelle année les Jeux Olympiques modernes ont-ils débuté ?",a:["1896","1900","1904","1912"],c:0,exp:"Les premiers JO modernes ont eu lieu à Athènes en 1896, à l'initiative de Pierre de Coubertin."},
+  {q:"Quel pays a inventé les pâtes ?",a:["Italie","France","Chine","Grèce"],c:2,exp:"Les pâtes ont été inventées en Chine, bien avant d'être popularisées en Italie par Marco Polo selon la légende."},
+  {q:"Quel est le symbole chimique du sodium ?",a:["So","Sa","Na","Sn"],c:2,exp:"Na vient du latin 'Natrium'. Le sodium est essentiel à la vie et est le principal composant du sel de table."},
+  {q:"Combien de continents y a-t-il sur Terre ?",a:["5","6","7","8"],c:2,exp:"Les 7 continents sont : Afrique, Antarctique, Asie, Australie-Océanie, Europe, Amérique du Nord, Amérique du Sud."},
+  {q:"Quel animal est le symbole de l'Australie ?",a:["Koala","Kangourou","Crocodile","Platypus"],c:1,exp:"Le kangourou rouge est l'animal national de l'Australie et apparaît sur les armoiries et la queue des avions Qantas."},
+  {q:"Quel est le livre le plus vendu de l'histoire ?",a:["Harry Potter","Le Petit Prince","La Bible","Le Seigneur des Anneaux"],c:2,exp:"La Bible a été imprimée à plus de 5 milliards d'exemplaires, ce qui en fait de loin le livre le plus vendu de l'histoire."},
+  {q:"Combien de dents a un adulte humain ?",a:["28","30","32","34"],c:2,exp:"Un adulte possède 32 dents incluant les 4 dents de sagesse. Sans dents de sagesse, on en a 28."},
+  {q:"Quel est l'océan le plus grand ?",a:["Atlantique","Indien","Arctique","Pacifique"],c:3,exp:"Le Pacifique couvre 165 millions de km², soit plus que toutes les terres émergées réunies."},
+  {q:"Quel pays a la plus longue côte au monde ?",a:["Australie","Russie","Canada","Norvège"],c:2,exp:"Le Canada possède 202 080 km de côtes, soit la plus longue au monde."},
+  {q:"En quelle année fut fondée l'ONU ?",a:["1945","1944","1946","1947"],c:0,exp:"L'ONU fut fondée le 24 octobre 1945, après la Seconde Guerre mondiale, pour maintenir la paix internationale."},
+  {q:"Quelle est la devise officielle de la France ?",a:["Liberté, Égalité, Fraternité","Foi, Espoir, Charité","Travail, Famille, Patrie","Dieu, Nation, Roi"],c:0,exp:"'Liberté, Égalité, Fraternité' est la devise républicaine française depuis la Révolution de 1789."},
+  {q:"Quel est le métal le plus précieux commercialement ?",a:["Or","Platine","Rhodium","Argent"],c:2,exp:"Le Rhodium est le métal le plus cher au monde, utilisé principalement dans les pots catalytiques des voitures."},
+  {q:"Quel instrument a 88 touches ?",a:["Guitare","Violon","Piano","Orgue"],c:2,exp:"Un piano standard possède exactement 88 touches : 52 blanches et 36 noires sur 7 octaves."},
+  {q:"Quel pays produit le plus de café ?",a:["Colombie","Brésil","Éthiopie","Vietnam"],c:1,exp:"Le Brésil produit environ 35% du café mondial, devant le Vietnam (16%) et la Colombie (8%)."},
+  {q:"Combien de planètes dans notre système solaire ?",a:["7","8","9","10"],c:1,exp:"Depuis 2006, il y a officiellement 8 planètes. Pluton a été reclassifiée comme 'planète naine' par l'UAI."},
+  {q:"Quelle est la langue la plus parlée en Europe ?",a:["Français","Espagnol","Russe","Anglais"],c:2,exp:"Le russe est la langue la plus parlée en Europe avec environ 130 millions de locuteurs natifs."},
+  {q:"Quel est le plus grand désert du monde ?",a:["Sahara","Gobi","Arabie","Antarctique"],c:3,exp:"L'Antarctique est techniquement le plus grand désert (froid) avec 14 millions de km², devant le Sahara."},
+  {q:"Quelle ville accueillera les JO 2028 ?",a:["Paris","Los Angeles","Brisbane","Tokyo"],c:1,exp:"Los Angeles accueillera les Jeux Olympiques d'été 2028, après avoir déjà organisé les éditions 1932 et 1984."},
+  {q:"Quel est l'animal terrestre le plus rapide ?",a:["Lion","Guépard","Impala","Faucon"],c:1,exp:"Le guépard peut atteindre 112 km/h en sprint sur de courtes distances, en environ 3 secondes."},
+  {q:"Combien de fuseaux horaires a la Russie ?",a:["9","10","11","12"],c:2,exp:"La Russie s'étend sur 11 fuseaux horaires, de Kaliningrad (UTC+2) à Kamtchatka (UTC+12)."},
+  {q:"Quel est le plus grand lac du monde ?",a:["Supérieur","Victoria","Baïkal","Mer Caspienne"],c:3,exp:"La Mer Caspienne est le plus grand lac du monde avec 371 000 km², devant le Lac Supérieur."},
+],
+
+tech:[
+  {q:"Qui a fondé Apple ?",a:["Bill Gates","Steve Jobs","Larry Page","Elon Musk"],c:1,exp:"Steve Jobs, Steve Wozniak et Ronald Wayne ont fondé Apple le 1er avril 1976 dans un garage de Los Altos."},
+  {q:"Quelle est la signification de 'HTTP' ?",a:["HyperText Transfer Protocol","HyperText Transmission Program","High Tech Transfer Process","Home Text Transfer Protocol"],c:0,exp:"HTTP (HyperText Transfer Protocol) est le protocole de communication entre client et serveur web, inventé par Tim Berners-Lee."},
+  {q:"En quelle année a été créé Internet ?",a:["1969","1983","1989","1991"],c:0,exp:"ARPANET, le précurseur d'Internet, fut créé en 1969. Le World Wide Web fut inventé par Tim Berners-Lee en 1989."},
+  {q:"Quel langage est utilisé pour le machine learning ?",a:["HTML","CSS","Python","PHP"],c:2,exp:"Python est le langage dominant en ML grâce à ses bibliothèques comme TensorFlow, PyTorch et Scikit-learn."},
+  {q:"Que signifie 'CPU' ?",a:["Central Processing Unit","Computer Power Unit","Core Program Utility","Central Program Uploader"],c:0,exp:"Le CPU (Central Processing Unit) est le cerveau de l'ordinateur, exécutant les instructions des programmes."},
+  {q:"Quel est le système d'exploitation mobile le plus utilisé ?",a:["iOS","Windows Mobile","Android","HarmonyOS"],c:2,exp:"Android détient environ 72% des parts de marché mondial des smartphones, suivi d'iOS avec 27%."},
+  {q:"Qui a inventé le World Wide Web ?",a:["Bill Gates","Tim Berners-Lee","Vint Cerf","Mark Zuckerberg"],c:1,exp:"Tim Berners-Lee a inventé le WWW en 1989 au CERN à Genève, proposant le HTML et les URL."},
+  {q:"Que signifie 'GPU' ?",a:["General Processing Unit","Graphics Processing Unit","Global Program Utility","Grid Power Unit"],c:1,exp:"Le GPU (Graphics Processing Unit) est spécialisé dans le traitement parallèle, crucial pour les jeux et l'IA."},
+  {q:"Quel est le langage de programmation le plus ancien encore utilisé ?",a:["COBOL","Fortran","BASIC","Pascal"],c:1,exp:"FORTRAN (1957) est toujours utilisé en calcul scientifique et ingénierie, notamment en météorologie et physique."},
+  {q:"Combien de bits dans un octet ?",a:["4","8","16","32"],c:1,exp:"Un octet = 8 bits. Un bit est la plus petite unité d'information (0 ou 1). 1 Ko = 1024 octets."},
+  {q:"Quel est l'operating system open source le plus connu ?",a:["macOS","Windows","Linux","FreeBSD"],c:2,exp:"Linux, créé par Linus Torvalds en 1991, est l'OS open source le plus utilisé, notamment sur les serveurs."},
+  {q:"Que fait un algorithme de compression ?",a:["Chiffre les données","Réduit la taille des fichiers","Copie les données","Accélère le CPU"],c:1,exp:"La compression réduit la taille des fichiers en éliminant la redondance. Ex : ZIP, MP3, JPEG utilisent cette technique."},
+  {q:"Quel langage est principalement utilisé pour les sites web frontend ?",a:["Python","Java","JavaScript","PHP"],c:2,exp:"JavaScript est le seul langage natif des navigateurs, permettant d'ajouter de l'interactivité aux pages web."},
+  {q:"Quelle entreprise a développé le processeur M1 ?",a:["Intel","AMD","Qualcomm","Apple"],c:3,exp:"Apple a lancé le puce M1 en 2020, marquant la transition de l'architecture Intel vers ses propres processeurs ARM."},
+  {q:"Que signifie 'RAM' ?",a:["Random Access Memory","Rapid Application Memory","Read And Modify","Remote Accessed Module"],c:0,exp:"La RAM (Random Access Memory) est la mémoire vive, rapide et temporaire où s'exécutent les programmes actifs."},
+  {q:"Qui est le CEO d'Anthropic, créateur de Claude ?",a:["Sam Altman","Demis Hassabis","Dario Amodei","Sundar Pichai"],c:2,exp:"Dario Amodei co-a fondé Anthropic en 2021 avec sa sœur Daniela après avoir travaillé chez OpenAI."},
+  {q:"Qu'est-ce que le Bitcoin ?",a:["Un réseau social","Une cryptomonnaie décentralisée","Un logiciel","Une base de données"],c:1,exp:"Bitcoin est la première cryptomonnaie, créée en 2009 par Satoshi Nakamoto. Elle fonctionne sans banque centrale."},
+  {q:"Quel est le protocole de sécurité pour les sites web ?",a:["HTTP","FTP","HTTPS","SSH"],c:2,exp:"HTTPS (HTTP Secure) chiffre les communications entre le navigateur et le serveur via SSL/TLS."},
+  {q:"Que signifie 'SSD' ?",a:["Solid State Drive","Super Speed Disk","System Storage Device","Secure Storage Data"],c:0,exp:"SSD (Solid State Drive) stocke les données sur de la mémoire flash, sans pièces mobiles, donc bien plus rapide qu'un HDD."},
+  {q:"Quel langage a été créé par Google ?",a:["Swift","Rust","Go","Kotlin"],c:2,exp:"Go (ou Golang) a été créé par Google en 2009 par Robert Griesemer, Rob Pike et Ken Thompson pour les systèmes scalables."},
+],
+
+anime:[
+  {q:"Qui a créé Dragon Ball Z ?",a:["Masashi Kishimoto","Eiichiro Oda","Akira Toriyama","Naoki Urasawa"],c:2,exp:"Akira Toriyama a créé Dragon Ball en 1984. Il est décédé en mars 2024, laissant un héritage immense dans la culture manga."},
+  {q:"Dans Naruto, quel est le bijuu de Naruto ?",a:["Kyubi","Hachibi","Gobi","Sanbi"],c:0,exp:"Le Kyubi, le Renard à Neuf Queues, est scellé en Naruto depuis sa naissance. C'est le plus puissant des neuf bijuu."},
+  {q:"Quel anime suit un lycéen qui trouve un 'Death Note' ?",a:["Attack on Titan","Death Note","Bleach","Fullmetal Alchemist"],c:1,exp:"Death Note suit Light Yagami qui utilise un carnet magique pour tuer les criminels, se prenant pour un dieu."},
+  {q:"Dans One Piece, quel est le rêve de Monkey D. Luffy ?",a:["Devenir le meilleur épéiste","Trouver One Piece","Être le meilleur cuisinier","Naviguer sur toutes les mers"],c:1,exp:"Luffy veut trouver le One Piece et devenir Roi des Pirates. Ce rêve lui a été inspiré par Shanks le Roux."},
+  {q:"Quel studio anime a créé Spirited Away ?",a:["Toei Animation","Gainax","Studio Ghibli","Kyoto Animation"],c:2,exp:"Studio Ghibli, fondé par Hayao Miyazaki et Isao Takahata, a réalisé 'Le Voyage de Chihiro' (2001), Oscar du meilleur film d'animation."},
+  {q:"Dans Attack on Titan, quel est le vrai nom de l'Armin ?",a:["Armin Arlelt","Armin Smith","Armin Braun","Armin Kruger"],c:0,exp:"Armin Arlelt est l'ami d'enfance d'Eren et Mikasa, stratège brillant qui héritera du Colosse Titan."},
+  {q:"Quelle est la puissance de combat appelée dans Dragon Ball Z ?",a:["Chakra","Ki","Reiatsu","Haki"],c:1,exp:"Le 'Ki' est l'énergie vitale dans Dragon Ball. Le Ki peut être concentré pour lancer des techniques comme le Kamehameha."},
+  {q:"Quel personnage de Bleach est le Capitaine de la 13ème division ?",a:["Yamamoto","Ukitake","Byakuya","Unohana"],c:1,exp:"Jushiro Ukitake est le capitaine de la 13ème division, connu pour sa noblesse et sa maladie chronique."},
+  {q:"Dans My Hero Academia, quel est l'alter de Deku ?",a:["One For All","All For One","Explosion","Half-Cold Half-Hot"],c:0,exp:"One For All est un alter qui se transmet de génération en génération, accumulant la puissance de chaque utilisateur."},
+  {q:"Quel anime est basé sur le jeu shogi ?",a:["Hikaru no Go","3-gatsu no Lion","Shogi Master","Strategy King"],c:1,exp:"3-gatsu no Lion suit Rei Kiriyama, un jeune prodige du shogi souffrant de dépression. Anime de Shaft très primé."},
+  {q:"Quel est le premier anime de Demon Slayer (titre anglais) ?",a:["Mugen Train","Entertainment District","Swordsmith Village","Infinity Castle"],c:0,exp:"Kimetsu no Yaiba: Mugen Train est sorti en 2020. Il est devenu le film le plus rentable du Japon de tous les temps."},
+  {q:"Dans Fullmetal Alchemist, quels membres du corps Edward a-t-il perdu ?",a:["Bras gauche et jambe droite","Bras droit et jambe gauche","Les deux bras","Les deux jambes"],c:1,exp:"Edward a perdu son bras droit et sa jambe gauche en essayant de ressusciter sa mère, loi de l'échange équivalent."},
+  {q:"Quelle est la salle de classe de Naruto ?",a:["Classe A","Équipe 7","Classe 1","Squad 9"],c:1,exp:"L'Équipe 7 est composée de Naruto, Sasuke et Sakura sous la direction du Jonin Kakashi Hatake."},
+  {q:"Quel personnage est Pikachu ?",a:["Dragon","Rongeur électrique","Félin","Insecte"],c:1,exp:"Pikachu est un Pokémon de type Électrik, rongeur inspiré d'un écureuil et d'un souris. Mascotte officielle des Pokémon."},
+  {q:"Dans Hunter x Hunter, quel est le groupe de chasseurs d'Ants ?",a:["Les Fantômes","La Brigade des Ombres","L'Association des Chasseurs","L'Armée des Fourmis"],c:1,exp:"La Brigade des Ombres (Troupe des Araignées) est le groupe de Chrollo, composé de 13 membres, dont Hisoka."},
+  {q:"Quel est l'ennemi principal dans Evangelion ?",a:["Les Apôtres","Les Angels","Les Titans","Les Demons"],c:1,exp:"Les Angels (Anges en français) sont des entités gigantesques que Shinji et les pilotes d'EVA doivent combattre dans Neon Genesis Evangelion."},
+],
+
+foot:[
+  {q:"Combien de Ballons d'Or Lionel Messi possède-t-il ?",a:["7","8","9","10"],c:1,exp:"Lionel Messi a remporté 8 Ballons d'Or (1er : 2009, dernier : 2023), établissant le record absolu."},
+  {q:"Quelle équipe a gagné la Coupe du Monde 2022 ?",a:["Brésil","France","Argentine","Maroc"],c:2,exp:"L'Argentine a battu la France aux tirs au but (3-3 a.p., 4-2 t.a.b.) à Lusail au Qatar. But décisif de Mbappé en finale."},
+  {q:"Quel club a remporté le plus de Ligues des Champions ?",a:["FC Barcelone","Bayern Munich","Real Madrid","Liverpool"],c:2,exp:"Le Real Madrid a remporté 15 Ligues des Champions, dont 5 consécutives entre 2015 et 2019."},
+  {q:"Qui a marqué le plus de buts en équipe nationale masculine ?",a:["Ronaldo","Messi","Mokhtar Dahari","Ali Daei"],c:0,exp:"Cristiano Ronaldo détient le record avec 130+ buts en sélection portugaise, dépassant Ali Daei en mars 2022."},
+  {q:"Quelle est la distance d'un penalty au goal ?",a:["9 m","11 m","10 m","12 m"],c:1,exp:"Le point de penalty est situé à 11 mètres (12 yards) du but. Cette règle existe depuis 1891."},
+  {q:"Qui a inventé le football ?",a:["Angleterre","France","Brésil","Italie"],c:0,exp:"Le football moderne a été codifié en Angleterre en 1863 avec la fondation de la Football Association."},
+  {q:"Dans quel stade joue le FC Barcelone ?",a:["Santiago Bernabéu","Camp Nou","Wembley","Metropolitano"],c:1,exp:"Le Camp Nou, inauguré en 1957, a une capacité de 99 354 places, en rénovation depuis 2023."},
+  {q:"Quel joueur a popularisé le terme 'Siuuu' ?",a:["Messi","Ronaldo","Neymar","Mbappé"],c:1,exp:"La célébration 'Siuuu' de Cristiano Ronaldo est devenue iconique depuis 2013. Il la réalise après avoir marqué."},
+  {q:"Combien de joueurs dans une équipe de football ?",a:["9","10","11","12"],c:2,exp:"Une équipe de football comprend 11 joueurs dont le gardien de but. Cette règle est fixée depuis 1863."},
+  {q:"Quel pays a remporté le plus de Coupes du Monde ?",a:["Allemagne","Italie","Argentine","Brésil"],c:3,exp:"Le Brésil a remporté 5 Coupes du Monde (1958, 1962, 1970, 1994, 2002), devant l'Allemagne et l'Italie (4 chacun)."},
+  {q:"Quel club Kylian Mbappé a-t-il rejoint en 2024 ?",a:["FC Barcelone","Real Madrid","Manchester City","PSG"],c:1,exp:"Kylian Mbappé a signé au Real Madrid en 2024, réalisant son rêve d'enfant après 7 saisons au PSG."},
+  {q:"Quelle est la durée d'un match de football ?",a:["80 min","90 min","95 min","100 min"],c:1,exp:"Un match dure 90 minutes (2×45 min). Le temps additionnel est ajouté par l'arbitre selon les pertes de temps."},
+  {q:"Quel est le record de buts en une saison de Liga ?",a:["49","50","58","60"],c:1,exp:"Lionel Messi détient le record avec 50 buts en Liga lors de la saison 2011-2012 avec le FC Barcelone."},
+  {q:"Quel pays a organisé la première Coupe du Monde ?",a:["France","Angleterre","Brésil","Uruguay"],c:3,exp:"L'Uruguay a organisé et remporté la première Coupe du Monde FIFA en 1930, battant l'Argentine en finale."},
+  {q:"Qui est surnommé 'Le Phénomène' dans le football ?",a:["Ronaldo Nazário","Ronaldinho","Messi","Romário"],c:0,exp:"Ronaldo Nazário (R9) est surnommé 'Le Phénomène'. Double vainqueur du Ballon d'Or (1997, 2002)."},
+],
+
+histoire:[
+  {q:"Qui était le premier président des États-Unis ?",a:["Thomas Jefferson","John Adams","George Washington","Benjamin Franklin"],c:2,exp:"George Washington fut le premier président américain de 1789 à 1797. Son visage figure sur le billet de 1 dollar."},
+  {q:"En quelle année débuta la Première Guerre Mondiale ?",a:["1912","1914","1916","1918"],c:1,exp:"La Première Guerre Mondiale débuta le 28 juillet 1914, après l'assassinat de l'Archiduc François-Ferdinand à Sarajevo."},
+  {q:"Qui a construit la Grande Muraille de Chine ?",a:["Kublai Khan","Gengis Khan","Qin Shi Huang","Han Wudi"],c:2,exp:"La Grande Muraille fut commencée par Qin Shi Huang, premier Empereur de Chine, en 221 av. J.-C."},
+  {q:"Quelle civilisation a construit les pyramides de Gizeh ?",a:["Romaine","Grecque","Égyptienne","Mésopotamienne"],c:2,exp:"Les pyramides de Gizeh furent construites par les Égyptiens il y a environ 4500 ans sous les pharaons Khéops, Khéphren et Mykérinos."},
+  {q:"Qui a découvert l'Amérique en 1492 ?",a:["Amerigo Vespucci","Vasco de Gama","Christophe Colomb","Magellan"],c:2,exp:"Christophe Colomb a atteint les Bahamas le 12 octobre 1492. Il croyait avoir atteint l'Asie."},
+  {q:"Quand débuta la Révolution française ?",a:["1787","1788","1789","1790"],c:2,exp:"La Révolution française débuta en 1789 avec la prise de la Bastille le 14 juillet, désormais fête nationale."},
+  {q:"Qui fut le premier homme dans l'espace ?",a:["Neil Armstrong","Buzz Aldrin","Youri Gagarine","Alan Shepard"],c:2,exp:"Youri Gagarine est devenu le premier humain dans l'espace le 12 avril 1961 à bord de Vostok 1, en 108 minutes."},
+  {q:"Quel empire était le plus grand de l'histoire ?",a:["Romain","Ottoman","Mongol","Britannique"],c:3,exp:"L'Empire britannique fut le plus grand de l'histoire, couvrant 24% des terres émergées au début du 20ème siècle."},
+  {q:"Qui a signé la Magna Carta ?",a:["Henri VIII","Richard Coeur de Lion","Jean sans Terre","Édouard Ier"],c:2,exp:"Le roi Jean sans Terre signa la Magna Carta en 1215, premier document limitant le pouvoir royal anglais."},
+  {q:"En quelle année tomba le Mur de Berlin ?",a:["1987","1988","1989","1990"],c:2,exp:"Le Mur de Berlin tomba dans la nuit du 9 novembre 1989, symbolisant la fin de la Guerre Froide."},
+  {q:"Qui était Napoléon Bonaparte ?",a:["Roi de France","Président","Empereur des Français","Général républicain"],c:2,exp:"Napoléon fut Empereur des Français de 1804 à 1815. Il réforma le droit civil avec le Code Napoléon."},
+  {q:"Quelle guerre a duré 100 ans ?",a:["Guerre de Succession","Guerre des Deux-Roses","Guerre de Cent Ans","Guerre de Trente Ans"],c:2,exp:"La Guerre de Cent Ans (1337-1453) opposa France et Angleterre. Jeanne d'Arc joua un rôle clé dans la victoire française."},
+  {q:"Où fut assassiné Jules César ?",a:["Au Colisée","Au Forum","Au Sénat (Théâtre de Pompée)","Dans son palais"],c:2,exp:"Jules César fut assassiné le 15 mars 44 av. J.-C. (Ides de Mars) au Théâtre de Pompée par Brutus et ses complices."},
+  {q:"Qui était Cléopâtre ?",a:["Reine de Rome","Pharaonne d'Égypte","Impératrice de Grèce","Reine de Carthage"],c:1,exp:"Cléopâtre VII fut la dernière pharaonne active d'Égypte. Célèbre pour ses relations avec Jules César et Marc Antoine."},
+  {q:"Quelle bombe fut larguée sur Hiroshima ?",a:["Fat Man","Little Boy","Trinity","Gadget"],c:1,exp:"'Little Boy', une bombe à uranium, fut larguée sur Hiroshima le 6 août 1945. 'Fat Man' (plutonium) tomba sur Nagasaki le 9 août."},
+],
+
+cinema:[
+  {q:"Qui a réalisé Titanic ?",a:["Steven Spielberg","Christopher Nolan","James Cameron","Ridley Scott"],c:2,exp:"James Cameron a réalisé Titanic (1997), qui remporta 11 Oscars. Il a aussi réalisé Avatar (2009), film le plus rentable."},
+  {q:"Quel acteur joue Tony Stark dans l'MCU ?",a:["Chris Evans","Robert Downey Jr.","Chris Hemsworth","Mark Ruffalo"],c:1,exp:"Robert Downey Jr. incarne Tony Stark / Iron Man depuis 2008. Son 'Je suis Iron Man' dans Endgame est iconique."},
+  {q:"Combien de films dans la saga Star Wars originale ?",a:["3","6","9","12"],c:2,exp:"La saga principale Star Wars comprend 9 films en 3 trilogies, plus des films dérivés comme Rogue One et Solo."},
+  {q:"Quel film a remporté l'Oscar du meilleur film en 1994 ?",a:["Pulp Fiction","Schindler's List","Forrest Gump","The Shawshank Redemption"],c:2,exp:"Forrest Gump a remporté 6 Oscars en 1995 (pour les films de 1994), dont meilleur film et meilleur réalisateur."},
+  {q:"Qui a joué Joker dans The Dark Knight (2008) ?",a:["Joaquin Phoenix","Jared Leto","Jack Nicholson","Heath Ledger"],c:3,exp:"Heath Ledger a incarné le Joker dans The Dark Knight, remportant un Oscar posthume. Il décéda avant la sortie du film."},
+  {q:"Dans quel film dit-on 'Hakuna Matata' ?",a:["Aladdin","Tarzan","Le Roi Lion","Bambi"],c:2,exp:"'Hakuna Matata' est une phrase Swahili signifiant 'pas de problème', rendue célèbre par Le Roi Lion (1994) de Disney."},
+  {q:"Quel acteur a joué Léon dans Léon (1994) ?",a:["Jean Reno","Luc Besson","Gary Oldman","Harvey Keitel"],c:0,exp:"Jean Reno incarne Léon, assassin professionnel qui prend sous sa protection la jeune Mathilda (Natalie Portman)."},
+  {q:"Quelle série a popularisé 'Winter is Coming' ?",a:["Vikings","The Witcher","Game of Thrones","Outlander"],c:2,exp:"'Winter is Coming' est la devise de la Maison Stark dans Game of Thrones, série HBO adaptée des livres de G.R.R. Martin."},
+  {q:"Quel film Disney met en scène une princesse des glaces ?",a:["Brave","La Belle et la Bête","Frozen","Encanto"],c:2,exp:"Frozen (La Reine des Neiges) sorti en 2013 est l'un des films d'animation les plus rentables avec 1,28 milliard $."},
+  {q:"Qui joue Walter White dans Breaking Bad ?",a:["Aaron Paul","Dean Norris","Bryan Cranston","Bob Odenkirk"],c:2,exp:"Bryan Cranston a incarné Walter White, prof de chimie devenu fabricant de meth. Il a remporté 4 Emmy Awards pour ce rôle."},
+  {q:"Quel film est le plus rentable de l'histoire du cinéma ?",a:["Avengers: Endgame","Titanic","Star Wars: The Force Awakens","Avatar"],c:3,exp:"Avatar (2009) de James Cameron détient le record avec 2,9 milliards $, légèrement devant Avengers: Endgame."},
+  {q:"Quel acteur a joué dans la plupart des films de Tarantino ?",a:["Brad Pitt","Samuel L. Jackson","John Travolta","Harvey Keitel"],c:1,exp:"Samuel L. Jackson est l'acteur fétiche de Tarantino, apparaissant dans Pulp Fiction, Django, Les 8 Salopards, etc."},
+  {q:"Quelle est la série la plus regardée sur Netflix ?",a:["Stranger Things","The Crown","Squid Game","Bridgerton"],c:2,exp:"Squid Game a établi le record Netflix avec 111 millions de foyers lors de ses 28 premiers jours en 2021."},
+  {q:"Quel réalisateur a créé la saga Lord of the Rings ?",a:["Christopher Nolan","Peter Jackson","Ridley Scott","Guillermo del Toro"],c:1,exp:"Peter Jackson a réalisé la trilogie Le Seigneur des Anneaux (2001-2003), remportant 17 Oscars au total."},
+  {q:"Quel film a popularisé la phrase 'I'll be back' ?",a:["Predator","Total Recall","Terminator","RoboCop"],c:2,exp:"Arnold Schwarzenegger prononce 'I'll be back' dans Terminator (1984), devenant l'une des phrases les plus citées du cinéma."},
+],
+
+jeux:[
+  {q:"Quel personnage de Nintendo est surnommé 'The Big N's Plumber' ?",a:["Donkey Kong","Mario","Link","Kirby"],c:1,exp:"Mario, créé par Shigeru Miyamoto, est le personnage le plus iconique de Nintendo et du jeu vidéo en général."},
+  {q:"Quel jeu se déroule dans 'Chernobylite' ?",a:["Moscou","Zone d'exclusion de Tchernobyl","Saint-Pétersbourg","Pripyat"],c:3,exp:"Chernobylite est un jeu de survie-horreur se déroulant dans la zone d'exclusion de Tchernobyl, incluant la ville fantôme de Pripyat."},
+  {q:"Quel jeu a introduit le personnage Lara Croft ?",a:["Uncharted","Tomb Raider","Prince of Persia","Assassin's Creed"],c:1,exp:"Lara Croft est apparue dans Tomb Raider (1996), développé par Core Design. Elle est l'une des premières héroïnes du jeu vidéo."},
+  {q:"Quel studio a créé The Witcher 3 ?",a:["Bethesda","Rockstar","CD Projekt Red","Bandai Namco"],c:2,exp:"CD Projekt Red a développé The Witcher 3: Wild Hunt (2015), souvent classé parmi les meilleurs jeux de tous les temps."},
+  {q:"Dans quel jeu incarne-t-on 'Master Chief' ?",a:["Gears of War","Doom","Halo","Call of Duty"],c:2,exp:"Master Chief (Spartan-117) est le héros de la saga Halo, exclusive Xbox développée par Bungie puis 343 Industries."},
+  {q:"Quel est le jeu mobile le plus téléchargé de l'histoire ?",a:["Candy Crush","Subway Surfers","Pokémon GO","Among Us"],c:1,exp:"Subway Surfers détient le record avec plus de 4 milliards de téléchargements depuis 2012."},
+  {q:"Qui développe le jeu Fortnite ?",a:["Activision","Epic Games","Valve","Roblox Corporation"],c:1,exp:"Fortnite est développé par Epic Games, qui a aussi créé l'Unreal Engine utilisé par de nombreux AAA."},
+  {q:"Dans quel jeu trouve-t-on la 'Mana Sword' ?",a:["Final Fantasy","Secret of Mana","Chrono Trigger","Zelda"],c:1,exp:"L'Épée de Mana est au cœur du jeu Secret of Mana (1993) de Square, classique absolu du RPG action Super Nintendo."},
+  {q:"Qu'est-ce que le 'Battle Royale' dans les jeux ?",a:["RPG solo","Jeu de plateforme","Mode de jeu dernier survivant","MMO"],c:2,exp:"Le Battle Royale oppose de nombreux joueurs jusqu'à ce qu'il n'en reste qu'un. Popularisé par PUBG et Fortnite en 2017."},
+  {q:"Quel jeu a popularisé le genre 'roguelike' ?",a:["Spelunky","Rogue","Nethack","Dwarf Fortress"],c:1,exp:"Rogue (1980) a donné son nom au genre. Les roguelikes se caractérisent par la génération procédurale et la mort permanente."},
+  {q:"Qui est le créateur de Minecraft ?",a:["Jens Bergensten","Phil Spencer","Markus Persson (Notch)","Todd Howard"],c:2,exp:"Markus 'Notch' Persson a créé Minecraft en 2009. Microsoft l'a racheté pour 2,5 milliards $ en 2014."},
+  {q:"Dans quelle ville se déroule GTA Vice City ?",a:["Los Santos","Liberty City","Vice City (Miami)","San Fierro"],c:2,exp:"Vice City est basée sur Miami des années 80, avec une esthétique néon et une bande son funk/new wave iconique."},
+  {q:"Quel jeu est connu pour sa phrase 'The Cake Is a Lie' ?",a:["Bioshock","Portal","Half-Life","Mirror's Edge"],c:1,exp:"'The Cake Is a Lie' vient de Portal (2007) de Valve, où GLaDOS promet un gâteau qui n'existera jamais."},
+  {q:"Quel MOBA est le plus joué au monde ?",a:["Dota 2","Heroes of the Storm","League of Legends","Smite"],c:2,exp:"League of Legends compte plus de 150 millions de joueurs inscrits et reste le jeu PC le plus populaire au monde."},
+  {q:"Quel jeu soul-like a popularisé le genre 'Soulsborne' ?",a:["Bloodborne","Elden Ring","Dark Souls","Sekiro"],c:2,exp:"Dark Souls (2011) de FromSoftware a créé le genre Soulsborne, connu pour sa difficulté exigeante et son lore cryptique."},
+],
+
+musique:[
+  {q:"Quel artiste est surnommé 'The King of Pop' ?",a:["Elvis Presley","Prince","Michael Jackson","Stevie Wonder"],c:2,exp:"Michael Jackson est 'Le Roi de la Pop'. Thriller (1982) reste l'album le plus vendu de l'histoire avec 66+ millions d'exemplaires."},
+  {q:"Qui a composé les Quatre Saisons ?",a:["Bach","Beethoven","Vivaldi","Mozart"],c:2,exp:"Antonio Vivaldi a composé Les Quatre Saisons en 1725. Ce concerto en 4 mouvements est l'œuvre baroque la plus connue."},
+  {q:"Quelle rappeuse est connue pour 'WAP' et 'Bodak Yellow' ?",a:["Nicki Minaj","Cardi B","Megan Thee Stallion","Doja Cat"],c:1,exp:"Cardi B est la première rappeuse à avoir 2 singles #1 au Billboard Hot 100 en solo (Bodak Yellow 2017, WAP 2020)."},
+  {q:"Quel groupe a chanté 'Bohemian Rhapsody' ?",a:["Led Zeppelin","The Beatles","Queen","Pink Floyd"],c:2,exp:"Bohemian Rhapsody de Queen (1975) est un chef-d'œuvre de Freddie Mercury. Le titre dure 5min55 et révolutionna le rock."},
+  {q:"Combien de Grammy Awards Taylor Swift a-t-elle gagné ?",a:["10","14","14+","20+"],c:3,exp:"Taylor Swift a remporté 14 Grammy Awards dont 4 'Album de l'Année', faisant d'elle la détentrice du plus grand nombre dans cette catégorie."},
+  {q:"Qui est le chanteur principal de Radiohead ?",a:["Chris Martin","Thom Yorke","Damon Albarn","Liam Gallagher"],c:1,exp:"Thom Yorke est le chanteur principal et l'âme créative de Radiohead. Il est aussi artiste solo avec des albums expérimentaux."},
+  {q:"Quelle chanson de Rihanna a été numéro 1 pendant 9 semaines ?",a:["Diamonds","Work","Umbrella","We Found Love"],c:2,exp:"Umbrella (2007) a été #1 au Billboard Hot 100 pendant 7 semaines et #1 au UK pendant 10 semaines, lançant la carrière mondiale de Rihanna."},
+  {q:"Quel rappeur s'appelle réellement Shawn Carter ?",a:["Kanye West","Jay-Z","Nas","DMX"],c:1,exp:"Jay-Z (Shawn Corey Carter) est considéré comme l'un des meilleurs rappeurs de tous les temps et est milliardaire grâce à ses activités d'entrepreneur."},
+  {q:"Quel pays a créé le genre musical 'Reggae' ?",a:["Cuba","Brésil","Jamaïque","Trinité-et-Tobago"],c:2,exp:"Le reggae est né en Jamaïque à la fin des années 1960, popularisé mondialement par Bob Marley dans les années 70."},
+  {q:"Quel instrument joue Billie Eilish ?",a:["Piano","Guitare","Ukulele","Violon"],c:2,exp:"Billie Eilish joue de l'ukulélé. Sa chanson 'Ocean Eyes' a été écrite et produite avec son frère Finneas quand elle avait 13 ans."},
+  {q:"Quel artiste a le plus de streams sur Spotify ?",a:["Drake","The Weeknd","Bad Bunny","Ed Sheeran"],c:2,exp:"Bad Bunny (Puerto Ricain) a été l'artiste le plus streamé sur Spotify 3 années consécutives (2020, 2021, 2022)."},
+  {q:"Quel groupe a chanté 'Smells Like Teen Spirit' ?",a:["Pearl Jam","Soundgarden","Nirvana","Alice in Chains"],c:2,exp:"Nirvana a sorti Smells Like Teen Spirit en 1991, changeant la face du rock et propulsant le grunge au premier plan."},
+],
+
+geo:[
+  {q:"Quelle est la capitale du Japon ?",a:["Osaka","Kyoto","Tokyo","Nagoya"],c:2,exp:"Tokyo est la capitale du Japon depuis 1869. Avec 37 millions d'habitants dans son aire urbaine, c'est la plus grande agglomération du monde."},
+  {q:"Quel fleuve est le plus long du monde ?",a:["Amazone","Mississippi","Nil","Yangtsé"],c:2,exp:"Le Nil mesure 6 650 km, légèrement devant l'Amazone (6 400 km). L'Amazone a le plus grand débit d'eau du monde."},
+  {q:"Quelle est la plus petite nation du monde ?",a:["Monaco","Liechtenstein","Saint-Marin","Vatican"],c:3,exp:"Le Vatican, avec 0,44 km² et environ 800 habitants, est le plus petit État indépendant du monde."},
+  {q:"Dans quel pays se trouve le Machu Picchu ?",a:["Bolivie","Colombie","Équateur","Pérou"],c:3,exp:"Le Machu Picchu est une citadelle inca du 15ème siècle située au Pérou, à 2 430m d'altitude dans les Andes."},
+  {q:"Quelle mer sépare l'Europe de l'Afrique ?",a:["Mer Rouge","Mer Noire","Mer Méditerranée","Mer Caspienne"],c:2,exp:"La Mer Méditerranée sépare l'Europe au nord et l'Afrique au sud. Elle baigne 21 pays sur ses rives."},
+  {q:"Quelle est la capitale de l'Inde ?",a:["Mumbai","Kolkata","New Delhi","Chennai"],c:2,exp:"New Delhi est la capitale de l'Inde depuis 1911, construite par les Britanniques. Mumbai reste la capitale financière."},
+  {q:"Quel est le plus long fleuve d'Amérique du Sud ?",a:["Paraná","Amazone","Orénoque","São Francisco"],c:1,exp:"L'Amazone, avec 6 400 km, est le plus long fleuve d'Amérique du Sud et celui avec le plus grand débit au monde."},
+  {q:"Dans quel pays se trouve la Tour de Pise ?",a:["France","Espagne","Grèce","Italie"],c:3,exp:"La Tour de Pise se trouve à Pise, en Toscane, Italie. Sa construction dura 199 ans (1173-1372). Elle penche à cause d'un terrain instable."},
+  {q:"Quelle est la plus grande ville d'Afrique ?",a:["Lagos","Kinshasa","Nairobi","Le Caire"],c:0,exp:"Lagos est la plus grande ville d'Afrique avec 21 millions d'habitants dans l'agglomération, devant Le Caire et Kinshasa."},
+  {q:"Quel est le pays le plus densément peuplé du monde ?",a:["Monaco","Bangladesh","Bahreïn","Singapour"],c:0,exp:"Monaco est le pays le plus densément peuplé avec 26 000 habitants/km². Parmi les grands pays, le Bangladesh est le plus dense."},
+  {q:"Combien de pays composent l'Union Européenne ?",a:["25","27","28","30"],c:1,exp:"L'UE compte 27 pays membres depuis le Brexit du Royaume-Uni en 2020. Elle a été fondée par le Traité de Maastricht en 1992."},
+  {q:"Quel océan sépare l'Europe de l'Amérique ?",a:["Pacifique","Indien","Atlantique","Arctique"],c:2,exp:"L'Océan Atlantique sépare l'Europe et l'Afrique de l'Amérique. Il couvre 106 millions de km², 2ème plus grand océan."},
+  {q:"Quelle ville est appelée 'La Sérénissime' ?",a:["Florence","Rome","Venise","Naples"],c:2,exp:"Venise est surnommée 'La Sérénissime' (de la République de Venise). Construite sur 118 îles, elle est menacée par la montée des eaux."},
+  {q:"Quel est le plus grand pays d'Afrique ?",a:["République Démocratique du Congo","Soudan","Algérie","Libye"],c:2,exp:"L'Algérie est le plus grand pays d'Afrique avec 2,38 millions km², depuis la séparation du Soudan du Sud en 2011."},
+],
+
+science:[
+  {q:"Quelle est la vitesse de la lumière ?",a:["300 000 km/s","150 000 km/s","299 792 km/s","200 000 km/s"],c:2,exp:"La vitesse de la lumière dans le vide est exactement 299 792 458 m/s, constante fondamentale de la physique (c)."},
+  {q:"Qui a découvert la pénicilline ?",a:["Louis Pasteur","Marie Curie","Alexander Fleming","Joseph Lister"],c:2,exp:"Alexander Fleming a découvert la pénicilline en 1928 par accident. Ce fut la première antibiotique, révolutionnant la médecine."},
+  {q:"Quel est l'atome le plus simple ?",a:["Hélium","Lithium","Hydrogène","Carbone"],c:2,exp:"L'hydrogène, avec 1 proton et 0 neutron, est l'atome le plus simple et le plus abondant dans l'univers (75% de la matière baryonique)."},
+  {q:"Quelle est la formule de E=mc² ?",a:["Énergie = masse × constante²","Énergie = masse × vitesse lumière²","Enthalpie = masse × chaleur","Aucune de ces réponses"],c:1,exp:"E=mc² (Einstein, 1905) : l'énergie (E) = masse (m) × (vitesse de la lumière)². La base de la physique nucléaire."},
+  {q:"Quel scientifique a formulé la théorie de la relativité ?",a:["Newton","Bohr","Einstein","Planck"],c:2,exp:"Albert Einstein a publié la relativité restreinte en 1905 et la relativité générale en 1915, révolutionnant notre compréhension de l'espace-temps."},
+  {q:"Combien de chromosomes possède un humain ?",a:["44","46","48","50"],c:1,exp:"Un humain possède 46 chromosomes (23 paires). Les gamètes (spermatozoïdes, ovules) en ont 23 (haploïdes)."},
+  {q:"Quel organe produit l'insuline ?",a:["Foie","Reins","Pancréas","Rate"],c:2,exp:"Le pancréas produit l'insuline dans les îlots de Langerhans. L'insuline régule la glycémie en aidant les cellules à absorber le glucose."},
+  {q:"Quel est le gaz le plus abondant dans l'atmosphère terrestre ?",a:["Oxygène","CO2","Azote","Argon"],c:2,exp:"L'azote (N2) représente 78% de l'atmosphère terrestre. L'oxygène en représente 21%, l'argon 0,9%."},
+  {q:"Qu'est-ce que la photosynthèse ?",a:["Respiration cellulaire","Conversion de lumière en énergie chimique","Digestion chez les plantes","Reproduction des plantes"],c:1,exp:"La photosynthèse convertit la lumière solaire, l'eau et le CO2 en glucose et oxygène. Elle est la base de la vie sur Terre."},
+  {q:"Quel est le métal le plus conducteur d'électricité ?",a:["Cuivre","Aluminium","Or","Argent"],c:3,exp:"L'argent est le meilleur conducteur électrique (63,0 MS/m), devant le cuivre (59,6 MS/m). Le cuivre est préféré pour son coût."},
+  {q:"Quel est le symbole chimique du fer ?",a:["Fe","Fr","Fi","Fa"],c:0,exp:"Fe vient du latin 'Ferrum'. Le fer est l'élément le plus abondant sur Terre par masse et compose la majorité du noyau terrestre."},
+  {q:"Qui a développé la théorie de l'évolution ?",a:["Lamarck","Mendel","Darwin","Wallace"],c:2,exp:"Charles Darwin a publié 'L'Origine des espèces' en 1859, proposant la sélection naturelle comme moteur de l'évolution."},
+  {q:"Quel est le pH d'une solution neutre ?",a:["6","7","8","9"],c:1,exp:"pH 7 est neutre. En dessous c'est acide, au-dessus c'est basique. L'eau pure a un pH de 7 à 25°C."},
+  {q:"Combien d'étoiles dans la Voie Lactée approximativement ?",a:["1 million","100 milliards","1 milliard","100 millions"],c:1,exp:"La Voie Lactée contient entre 100 et 400 milliards d'étoiles. Notre soleil est à 26 000 années-lumière du centre galactique."},
+],
+
+celeb:[
+  {q:"Qui est Elon Musk ?",a:["PDG de Google","Inventeur d'iPhone","Fondateur de Tesla et SpaceX","Président des USA"],c:2,exp:"Elon Musk est fondateur/CEO de SpaceX, Tesla, xAI et propriétaire de X (ex-Twitter). L'une des personnes les plus riches au monde."},
+  {q:"Quel pays Nelson Mandela a-t-il dirigé ?",a:["Nigeria","Kenya","Afrique du Sud","Zimbabwe"],c:2,exp:"Nelson Mandela fut le premier président noir d'Afrique du Sud (1994-1999) après 27 ans d'emprisonnement pour sa lutte contre l'apartheid."},
+  {q:"Quel auteur a créé Harry Potter ?",a:["Tolkien","C.S. Lewis","J.K. Rowling","Philip Pullman"],c:2,exp:"J.K. Rowling a créé Harry Potter en 1997. La saga compte 7 livres, vendus à 600 millions d'exemplaires dans 80 langues."},
+  {q:"Qui est Malala Yousafzai ?",a:["Présidente du Pakistan","Prix Nobel de la Paix","Chercheuse spatiale","Joueuse de tennis"],c:1,exp:"Malala Yousafzai est une militante pakistanaise pour l'éducation des filles. Prix Nobel de la Paix 2014, plus jeune lauréate de l'histoire."},
+  {q:"Quel scientifique a co-découvert la structure de l'ADN ?",a:["Einstein","Watson & Crick","Pasteur","Darwin"],c:1,exp:"James Watson et Francis Crick ont découvert la structure en double hélice de l'ADN en 1953, avec l'aide cruciale de Rosalind Franklin."},
+  {q:"Qui est Mark Zuckerberg ?",a:["Fondateur de Twitter","PDG d'Apple","Fondateur de Facebook/Meta","CEO de Google"],c:2,exp:"Mark Zuckerberg a fondé Facebook en 2004 à Harvard. Meta possède Facebook, Instagram, WhatsApp et développe la réalité virtuelle."},
+  {q:"Quel peintre était connu pour ses oreilles ?",a:["Picasso","Dalí","Van Gogh","Monet"],c:2,exp:"Vincent Van Gogh s'est coupé l'oreille gauche en décembre 1888 lors d'une crise nerveuse. Il vendit un seul tableau de son vivant."},
+  {q:"Qui est Usain Bolt ?",a:["Nageur jamaïcain","Sprinter jamaïcain","Boxeur cubain","Sauteur américain"],c:1,exp:"Usain Bolt est le sprinter jamaïcain le plus rapide de l'histoire : 9,58s sur 100m et 19,19s sur 200m, records du monde."},
+],
+
+mytho:[
+  {q:"Qui est le dieu grec de la mer ?",a:["Zeus","Hadès","Poséidon","Apollon"],c:2,exp:"Poséidon est le dieu grec de la mer, des tremblements de terre et des chevaux. Son équivalent romain est Neptune."},
+  {q:"Quel héros grec a accompli les 12 travaux ?",a:["Achille","Ulysse","Hercule","Thésée"],c:2,exp:"Héraclès (Hercule en latin) a accompli 12 travaux imposés par le roi Eurysthée comme expiation pour avoir tué sa famille."},
+  {q:"Qui est le dieu égyptien de la mort ?",a:["Ra","Horus","Anubis","Seth"],c:2,exp:"Anubis, à tête de chacal, est le dieu égyptien de l'embaumement et des morts. Il pesait le cœur des défunts contre une plume."},
+  {q:"Dans la mythologie nordique, qui est le père d'Odin ?",a:["Thor","Loki","Borr","Ymir"],c:2,exp:"Borr est le père d'Odin dans la mythologie nordique. Odin est le dieu suprême du panthéon nordique, père de Thor."},
+  {q:"Quel animal symbolise Athéna ?",a:["Aigle","Serpent","Hibou","Dauphin"],c:2,exp:"La chouette (ou hibou) est l'animal sacré d'Athéna, déesse de la sagesse et de la guerre. Elle figure sur les pièces d'Athènes."},
+  {q:"Qui a volé le feu aux dieux dans la mythologie grecque ?",a:["Icare","Prométhée","Sisyphe","Tantale"],c:1,exp:"Prométhée vola le feu de l'Olympe pour le donner aux humains. Zeus le punit en l'enchaînant et en envoyant un aigle ronger son foie chaque jour."},
+  {q:"Quel est le berceau des dieux nordiques ?",a:["Midgard","Asgard","Valhalla","Helheim"],c:1,exp:"Asgard est le royaume des Ases (Odin, Thor, Freya...). Midgard est le monde des humains. Les 9 royaumes sont reliés par Yggdrasil."},
+  {q:"Qui est le dieu romain de la guerre ?",a:["Jupiter","Mars","Vénus","Mercure"],c:1,exp:"Mars est le dieu romain de la guerre, équivalent d'Arès grec. Le mois de mars lui est dédié. Il était très vénéré à Rome."},
+  {q:"Quelle créature a tué Achille ?",a:["Hector","Pâris avec une flèche","Agamemnon","Ménélas"],c:1,exp:"Achille fut tué par une flèche de Pâris guidée par Apollon, atteignant son talon, son seul point vulnérable. D'où l'expression 'talon d'Achille'."},
+  {q:"Quel demi-dieu était fils de Poséidon ?",a:["Hercule","Persée","Thésée","Bellérophon"],c:2,exp:"Thésée est le fils de Poséidon et d'Aethra. Il est connu pour avoir tué le Minotaure dans le Labyrinthe de Crète."},
+],
+
+internet:[
+  {q:"Quel réseau social a lancé les 'Stories' en premier ?",a:["Instagram","Snapchat","Facebook","TikTok"],c:1,exp:"Snapchat a introduit les Stories en 2013. Instagram les a copiées en 2016, Facebook en 2017, et TikTok en 2019."},
+  {q:"Que signifie 'SEO' ?",a:["Social Engagement Optimization","Search Engine Optimization","Site Experience Online","Secure Email Output"],c:1,exp:"Le SEO (Search Engine Optimization) est l'ensemble des techniques pour améliorer le classement d'un site dans les moteurs de recherche."},
+  {q:"Quelle entreprise possède Instagram ?",a:["Google","Twitter","Meta (Facebook)","Microsoft"],c:2,exp:"Meta (anciennement Facebook) a racheté Instagram en 2012 pour 1 milliard $, un des meilleurs investissements tech de l'histoire."},
+  {q:"Quel était le premier réseau social populaire ?",a:["Facebook","MySpace","Friendster","LinkedIn"],c:1,exp:"MySpace (2003) fut le premier réseau social majeur, dépassé par Facebook en 2008. Friendster (2002) fut pionnier mais moins populaire."},
+  {q:"Que signifie 'Meme' sur Internet ?",a:["Une erreur virale","Un contenu humoristique qui se propage","Un type de vidéo","Une image pixelisée"],c:1,exp:"Le terme 'meme' vient de Richard Dawkins (1976) pour décrire la transmission culturelle. Sur Internet, c'est du contenu viral et humoristique."},
+  {q:"Quel pays a le plus d'utilisateurs TikTok ?",a:["USA","Inde","Chine","Brésil"],c:0,exp:"Les États-Unis comptent le plus d'utilisateurs TikTok hors Chine. L'app est gérée séparément en Chine sous le nom Douyin."},
+  {q:"Que signifie NFT ?",a:["New Financial Token","Non-Fungible Token","Network File Transfer","Next Future Technology"],c:1,exp:"NFT (Non-Fungible Token) est un certificat de propriété numérique unique enregistré sur une blockchain. Popularisé en 2021."},
+  {q:"Quel est le premier tweet de l'histoire ?",a:["Hello World","just setting up my twttr","Twitter is live!","Test tweet"],c:1,exp:"Jack Dorsey a posté le premier tweet 'just setting up my twttr' le 21 mars 2006, quand Twitter s'appelait encore 'twttr'."},
+  {q:"Combien d'utilisateurs actifs mensuels a WhatsApp ?",a:["1 milliard","1,5 milliard","2+ milliards","500 millions"],c:2,exp:"WhatsApp compte plus de 2 milliards d'utilisateurs actifs mensuels dans 180 pays, racheté par Facebook en 2014 pour 19 milliards $."},
+  {q:"Quel YouTubeur a le plus d'abonnés ?",a:["MrBeast","PewDiePie","T-Series","Cocomelon"],c:2,exp:"T-Series est la chaîne YouTube avec le plus d'abonnés (260M+), devant MrBeast (~300M). T-Series est une maison de disques indienne."},
+],
+
+business:[
+  {q:"Qui est le fondateur d'Amazon ?",a:["Larry Ellison","Jeff Bezos","Larry Page","Michael Dell"],c:1,exp:"Jeff Bezos a fondé Amazon en 1994 dans son garage à Bellevue, Washington. Il a quitté le poste de PDG en 2021."},
+  {q:"Quel est le principe du 'Lean Startup' ?",a:["Lever beaucoup de fonds","Développer, mesurer, apprendre rapidement","Recruter massivement","Copier les concurrents"],c:1,exp:"Le Lean Startup d'Eric Ries préconise des cycles rapides de 'Build-Measure-Learn' pour valider les hypothèses business avec un MVP."},
+  {q:"Que signifie 'IPO' ?",a:["Internal Product Operations","Initial Public Offering","Internet Protocol Output","Integrated Platform Operation"],c:1,exp:"IPO (Initial Public Offering) est l'introduction en bourse d'une entreprise. Elle lève des fonds en vendant des actions au public pour la première fois."},
+  {q:"Quel est le principe des 80/20 en business ?",a:["Règle de Parkinson","Loi de Pareto","Loi de Moore","Principe de Peter"],c:1,exp:"La loi de Pareto (80/20) stipule que 80% des effets viennent de 20% des causes. Ex : 80% du CA vient de 20% des clients."},
+  {q:"Qui a fondé Tesla ?",a:["Elon Musk seul","Martin Eberhard et Marc Tarpenning","Jeff Bezos","Steve Jobs"],c:1,exp:"Tesla fut fondée en 2003 par Martin Eberhard et Marc Tarpenning. Elon Musk est entré au conseil en 2004 et en est devenu CEO en 2008."},
+  {q:"Qu'est-ce que le 'Bootstrap' en entrepreneuriat ?",a:["Lever des fonds VC","Financer sa startup sans investisseurs externes","Recruter des développeurs","Pivoter son modèle"],c:1,exp:"Bootstrapping = financer sa startup avec ses propres ressources ou les revenus du business, sans investisseurs externes. Airbnb a bootstrappé au début."},
+  {q:"Quel indicateur mesure la satisfaction client ?",a:["KPI","MRR","NPS","EBITDA"],c:2,exp:"Le NPS (Net Promoter Score) mesure la probabilité que des clients recommandent une marque. Score de -100 à +100. Inventé par Bain & Company."},
+  {q:"Quelle est la valorisation d'Apple en 2024 ?",a:["1 000 milliards $","2 000 milliards $","3 000 milliards $","4 000 milliards $"],c:2,exp:"Apple a atteint 3 000 milliards $ de capitalisation boursière, première entreprise à franchir ce cap. Elle vaut plus que tout le CAC40 réuni."},
+  {q:"Qu'est-ce qu'un 'Unicorn' en startup ?",a:["Startup profitable","Startup valorisée +1 milliard $","Startup cotée en bourse","Startup avec 1 million d'utilisateurs"],c:1,exp:"Une 'licorne' est une startup valorisée à plus d'1 milliard $ avant son introduction en bourse. Le terme a été créé par Aileen Lee en 2013."},
+  {q:"Qui a fondé Netflix ?",a:["Reed Hastings seul","Reed Hastings et Marc Randolph","Jeff Bezos","Ted Sarandos"],c:1,exp:"Netflix a été fondé en 1997 par Reed Hastings et Marc Randolph. La plateforme de streaming a révolutionné l'industrie du divertissement."},
+],
+
+mode:[
+  {q:"Quelle marque de luxe est connue pour son 'monogramme LV' ?",a:["Chanel","Gucci","Louis Vuitton","Hermès"],c:2,exp:"Le monogramme Louis Vuitton (LV) a été créé en 1896 par Georges Vuitton, fils de Louis, pour protéger les produits des contrefacteurs."},
+  {q:"Quel parfum est le plus vendu au monde ?",a:["Dior Sauvage","Chanel N°5","J'adore Dior","Bleu de Chanel"],c:0,exp:"Dior Sauvage est le parfum le plus vendu au monde depuis 2019, dépassant Chanel N°5 qui avait dominé pendant des décennies."},
+  {q:"Quelle marque possède les sacs Birkin ?",a:["Chanel","Louis Vuitton","Hermès","Dior"],c:2,exp:"Le Birkin d'Hermès, créé en 1984 pour Jane Birkin, est le sac le plus précieux au monde. Certains valent plus de 500 000$."},
+  {q:"Qui a fondé la maison Chanel ?",a:["Hubert de Givenchy","Christian Dior","Gabrielle 'Coco' Chanel","Yves Saint Laurent"],c:2,exp:"Gabrielle Bonheur Chanel ('Coco') a fondé sa maison en 1910. Elle a révolutionné la mode féminine en libérant les femmes du corset."},
+  {q:"Quel groupe possède Louis Vuitton, Dior et Givenchy ?",a:["Richemont","Kering","LVMH","Tapestry"],c:2,exp:"LVMH (Bernard Arnault) est le plus grand groupe de luxe au monde, possédant 75+ marques incluant LV, Dior, Givenchy, Bulgari, Sephora."},
+  {q:"Quelle sneaker Nike est la plus iconique ?",a:["Nike Cortez","Air Max 1","Air Jordan 1","Nike Air Force 1"],c:2,exp:"La Air Jordan 1 (1985) dessinée par Peter Moore et signée Michael Jordan est la sneaker la plus iconique et collectable au monde."},
+  {q:"Quel styliste est surnommé 'Kaiser Karl' ?",a:["Raf Simons","Karl Lagerfeld","Marc Jacobs","Tom Ford"],c:1,exp:"Karl Lagerfeld était le directeur artistique de Chanel, Fendi et sa propre marque pendant 50 ans, connu pour son style distinctif."},
+  {q:"Quelle marque française est réputée pour ses foulards en soie ?",a:["Chanel","Louis Vuitton","Hermès","Dior"],c:2,exp:"Les foulards Hermès en soie imprimée sont des œuvres d'art. Chaque carré (90x90cm) nécessite 18 mois de création et utilise 110 teintes max."},
+  {q:"Quel designer a créé la 'petite robe noire' ?",a:["Dior","Versace","Coco Chanel","Valentino"],c:2,exp:"Coco Chanel a popularisé la 'petite robe noire' dans les années 1920, la rendant symbole d'élégance universelle et intemporelle."},
+  {q:"Quelle marque est connue pour ses trench-coats emblématiques ?",a:["Burberry","Aquascutum","Barbour","Hunter"],c:0,exp:"Burberry, fondé en 1856, est célèbre pour son trench-coat à carreaux et son tartan beige, camel, noir et rouge iconique."},
+]
+};
+
+// ==================== STATE ====================
+let state={
+  mode:'local',
+  p1:{name:'Joueur 1',av:'🦁',score:0,correct:0,wrong:0,bonus:0},
+  p2:{name:'Joueur 2',av:'🦊',score:0,correct:0,wrong:0,bonus:0},
+  themes:[],
+  qPerTheme:8,
+  timerMax:15,
+  currentThemeIdx:0,
+  currentQIdx:0,
+  currentPlayer:1,
+  questions:[],
+  themeQuestions:[],
+  themeScores:{p1:0,p2:0},
+  timer:null,
+  timeLeft:15,
+  answered:false,
+  roundP1:{score:0,correct:0,wrong:0,bonus:0},
+  roundP2:{score:0,correct:0,wrong:0,bonus:0},
+};
+
+let av1Sel=0,av2Sel=1;
+let selectedThemes=new Set();
+let lb=JSON.parse(localStorage.getItem('duelQuizLB')||'[]');
+
+// ==================== AUDIO ====================
+let audioCtx=null;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+
+function playTone(type){
+  try{
+    const ac=getAudio();
+    const o=ac.createOscillator();
+    const g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    if(type==='correct'){
+      o.type='sine';
+      o.frequency.setValueAtTime(523,ac.currentTime);
+      o.frequency.setValueAtTime(659,ac.currentTime+0.1);
+      o.frequency.setValueAtTime(784,ac.currentTime+0.2);
+      g.gain.setValueAtTime(0.3,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.5);
+      o.start();o.stop(ac.currentTime+0.5);
+    }else if(type==='wrong'){
+      o.type='sawtooth';
+      o.frequency.setValueAtTime(200,ac.currentTime);
+      o.frequency.setValueAtTime(150,ac.currentTime+0.1);
+      g.gain.setValueAtTime(0.2,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);
+      o.start();o.stop(ac.currentTime+0.3);
+    }else if(type==='win'){
+      [523,659,784,1047].forEach((f,i)=>{
+        const o2=ac.createOscillator(),g2=ac.createGain();
+        o2.connect(g2);g2.connect(ac.destination);
+        o2.type='sine';o2.frequency.setValueAtTime(f,ac.currentTime+i*0.15);
+        g2.gain.setValueAtTime(0.3,ac.currentTime+i*0.15);
+        g2.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+i*0.15+0.3);
+        o2.start(ac.currentTime+i*0.15);o2.stop(ac.currentTime+i*0.15+0.3);
+      });
+    }else if(type==='tick'){
+      o.type='square';
+      o.frequency.setValueAtTime(800,ac.currentTime);
+      g.gain.setValueAtTime(0.05,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.05);
+      o.start();o.stop(ac.currentTime+0.05);
+    }
+  }catch(e){}
+}
+
+// ==================== UI UTILS ====================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display=''});
+  const s=document.getElementById('screen-'+id);
+  s.classList.add('active');
+}
+
+function notify(msg,color='var(--text)'){
+  const n=document.getElementById('notif');
+  n.textContent=msg;n.style.color=color;
+  n.classList.add('show');
+  clearTimeout(n._t);
+  n._t=setTimeout(()=>n.classList.remove('show'),2500);
+}
+
+function confetti(){
+  const colors=['#7c3aed','#06b6d4','#f59e0b','#10b981','#ef4444','#ec4899'];
+  for(let i=0;i<30;i++){
+    const d=document.createElement('div');
+    d.className='confetti-dot';
+    const size=Math.random()*10+5;
+    d.style.cssText=`width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}vw;top:0;animation-delay:${Math.random()*0.5}s;animation-duration:${1+Math.random()*1}s`;
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),2000);
+  }
+}
+
+// ==================== SETUP ====================
+function buildAvatarGrids(){
+  ['av1grid','av2grid'].forEach((id,pi)=>{
+    const g=document.getElementById(id);g.innerHTML='';
+    AVATARS.forEach((av,i)=>{
+      const d=document.createElement('div');
+      d.className='avatar-opt'+(pi===0&&i===av1Sel?' selected':pi===1&&i===av2Sel?' selected sel2':'');
+      d.textContent=av;
+      d.onclick=()=>{
+        if(pi===0){av1Sel=i;document.querySelectorAll('#av1grid .avatar-opt').forEach((x,j)=>{x.className='avatar-opt'+(j===i?' selected':'')});}
+        else{av2Sel=i;document.querySelectorAll('#av2grid .avatar-opt').forEach((x,j)=>{x.className='avatar-opt'+(j===i?' selected sel2':'')});}
+      };
+      g.appendChild(d);
+    });
+  });
+}
+
+function buildThemeGrid(){
+  const g=document.getElementById('themeGrid');g.innerHTML='';
+  THEMES.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='theme-opt'+(selectedThemes.has(t.id)?' selected':'');
+    d.innerHTML=`<div class="theme-icon">${t.icon}</div><div>${t.name}</div>`;
+    d.onclick=()=>{
+      if(selectedThemes.has(t.id)){selectedThemes.delete(t.id);d.classList.remove('selected');}
+      else{selectedThemes.add(t.id);d.classList.add('selected');}
+      document.getElementById('themeCount').textContent=`${selectedThemes.size} thème(s) sélectionné(s)`;
+    };
+    g.appendChild(d);
+  });
+}
+
+function selectAllThemes(){THEMES.forEach(t=>selectedThemes.add(t.id));buildThemeGrid();document.getElementById('themeCount').textContent=`${selectedThemes.size} thème(s) sélectionné(s)`;}
+function clearThemes(){selectedThemes.clear();buildThemeGrid();document.getElementById('themeCount').textContent='0 thème(s) sélectionné(s)';}
+function randomThemes(){
+  selectedThemes.clear();
+  const shuffled=[...THEMES].sort(()=>Math.random()-.5);
+  shuffled.slice(0,Math.floor(Math.random()*4)+3).forEach(t=>selectedThemes.add(t.id));
+  buildThemeGrid();
+  document.getElementById('themeCount').textContent=`${selectedThemes.size} thème(s) sélectionné(s)`;
+}
+
+function selectMode(m){
+  state.mode=m;
+  document.getElementById('mode-local').classList.toggle('selected',m==='local');
+  document.getElementById('mode-sim').classList.toggle('selected',m==='sim');
+  if(m==='sim'){
+    document.getElementById('p2name').value='IA Duel';
+    document.getElementById('p2name').disabled=true;
+    av2Sel=9;
+    document.querySelectorAll('#av2grid .avatar-opt').forEach((x,j)=>{x.className='avatar-opt'+(j===av2Sel?' selected sel2':'')});
+  }else{
+    document.getElementById('p2name').value='Joueur 2';
+    document.getElementById('p2name').disabled=false;
+  }
+}
+
+function gotoHome(){showScreen('home');}
+
+function gotoSetup(){
+  buildAvatarGrids();
+  buildThemeGrid();
+  if(selectedThemes.size===0) randomThemes();
+  document.getElementById('themeCount').textContent=`${selectedThemes.size} thème(s) sélectionné(s)`;
+  showScreen('setup');
+}
+
+function gotoLeaderboard(){
+  renderLeaderboard();
+  showScreen('lb');
+}
+
+// ==================== GAME START ====================
+function startGame(){
+  if(selectedThemes.size===0){notify('⚠️ Sélectionnez au moins 1 thème !','#f59e0b');return;}
+  state.p1.name=document.getElementById('p1name').value||'Joueur 1';
+  state.p2.name=document.getElementById('p2name').value||'Joueur 2';
+  state.p1.av=AVATARS[av1Sel];
+  state.p2.av=AVATARS[av2Sel];
+  state.qPerTheme=parseInt(document.getElementById('qPerTheme').value);
+  state.timerMax=parseInt(document.getElementById('timerSel').value);
+  state.themes=[...selectedThemes].sort(()=>Math.random()-.5);
+  state.currentThemeIdx=0;
+  state.currentPlayer=1;
+  state.p1.score=0;state.p1.correct=0;state.p1.wrong=0;state.p1.bonus=0;
+  state.p2.score=0;state.p2.correct=0;state.p2.wrong=0;state.p2.bonus=0;
+  loadTheme();
+}
+
+function loadTheme(){
+  const thId=state.themes[state.currentThemeIdx];
+  const th=THEMES.find(t=>t.id===thId);
+  const pool=QUESTIONS[thId]||[];
+  state.themeQuestions=shuffle([...pool]).slice(0,state.qPerTheme);
+  state.currentQIdx=0;
+  state.roundP1={score:0,correct:0,wrong:0,bonus:0};
+  state.roundP2={score:0,correct:0,wrong:0,bonus:0};
+  document.getElementById('themeName').textContent=`${th.icon} ${th.name}`;
+  showScreen('game');
+  updateHUD();
+  loadQuestion();
+}
+
+function shuffle(arr){return arr.sort(()=>Math.random()-.5)}
+
+function loadQuestion(){
+  if(state.currentQIdx>=state.themeQuestions.length){endRound();return;}
+  state.answered=false;
+  const q=state.themeQuestions[state.currentQIdx];
+  // Shuffle answers
+  const idxs=[0,1,2,3].sort(()=>Math.random()-.5);
+  const corrIdx=idxs.indexOf(q.c);
+  const shuffledAns=idxs.map(i=>q.a[i]);
+  q._corrShuf=corrIdx;
+  q._shuffled=shuffledAns;
+
+  // Update progress
+  const prog=((state.currentQIdx)/state.themeQuestions.length)*100;
+  document.getElementById('progressFill').style.width=prog+'%';
+  document.getElementById('progressLabel').textContent=`Question ${state.currentQIdx+1}/${state.themeQuestions.length}`;
+  document.getElementById('qNum').textContent=`Question ${state.currentQIdx+1} sur ${state.themeQuestions.length}`;
+  document.getElementById('qText').textContent=q.q;
+  document.getElementById('feedbackPanel').style.display='none';
+  document.getElementById('feedbackPanel').classList.remove('show');
+
+  // Turn badge
+  const tb=document.getElementById('turnBadge');
+  const p=state.currentPlayer===1?state.p1:state.p2;
+  tb.className='q-turn-badge '+(state.currentPlayer===1?'t1':'t2');
+  tb.textContent=`${p.av} Tour de ${p.name}`;
+
+  // Answers
+  const ag=document.getElementById('answersGrid');ag.innerHTML='';
+  const letters=['A','B','C','D'];
+  shuffledAns.forEach((ans,i)=>{
+    const btn=document.createElement('button');
+    btn.className='ans-btn';
+    btn.innerHTML=`<span class="ans-letter">${letters[i]}</span>${ans}`;
+    btn.onclick=()=>answer(i,q,btn);
+    ag.appendChild(btn);
+  });
+
+  // Update active indicator
+  document.getElementById('ind1').style.display=state.currentPlayer===1?'':'none';
+  document.getElementById('ind2').style.display=state.currentPlayer===2?'':'none';
+  document.getElementById('hud1').className='player-hud'+(state.currentPlayer===1?' active-p1':'');
+  document.getElementById('hud2').className='player-hud p2'+(state.currentPlayer===2?' active-p2':'');
+
+  startTimer();
+
+  // If AI mode, simulate AI after random delay
+  if(state.mode==='sim'&&state.currentPlayer===2){
+    const delay=Math.random()*8000+3000;
+    state._aiTimer=setTimeout(()=>{
+      if(!state.answered){
+        // AI has 70% chance correct
+        const aiCorrect=Math.random()<0.7;
+        const aiChoice=aiCorrect?q._corrShuf:([0,1,2,3].filter(x=>x!==q._corrShuf)[Math.floor(Math.random()*3)]);
+        const btns=document.querySelectorAll('.ans-btn');
+        if(btns[aiChoice])btns[aiChoice].click();
+      }
+    },delay);
+  }
+}
+
+function startTimer(){
+  clearInterval(state.timer);
+  clearTimeout(state._aiTimer);
+  state.timeLeft=state.timerMax;
+  const arc=document.getElementById('timerArc');
+  const num=document.getElementById('timerNum');
+  const circ=188.5;
+  arc.style.stroke='#7c3aed';
+  num.style.color='var(--text)';
+
+  state.timer=setInterval(()=>{
+    state.timeLeft--;
+    const frac=state.timeLeft/state.timerMax;
+    arc.style.strokeDashoffset=(1-frac)*circ;
+    num.textContent=state.timeLeft;
+    if(state.timeLeft<=5){arc.style.stroke='#ef4444';num.style.color='#ef4444';if(state.timeLeft>0)playTone('tick');}
+    else if(state.timeLeft<=8){arc.style.stroke='#f59e0b';}
+    if(state.timeLeft<=0){clearInterval(state.timer);timeUp();}
+  },1000);
+}
+
+function timeUp(){
+  if(state.answered)return;
+  state.answered=true;
+  clearTimeout(state._aiTimer);
+  const q=state.themeQuestions[state.currentQIdx];
+  // Show correct answer
+  const btns=document.querySelectorAll('.ans-btn');
+  btns.forEach((b,i)=>{b.disabled=true;if(i===q._corrShuf)b.classList.add('correct');});
+  // Show feedback
+  showFeedback(false,'⏰ Temps écoulé !',`La bonne réponse était : ${q._shuffled[q._corrShuf]}`,0);
+  playTone('wrong');
+  // Add to wrong
+  if(state.currentPlayer===1){state.roundP1.wrong++;state.p1.wrong++;}
+  else{state.roundP2.wrong++;state.p2.wrong++;}
+  scheduleNextQ();
+}
+
+function answer(idx,q,btn){
+  if(state.answered)return;
+  state.answered=true;
+  clearInterval(state.timer);
+  clearTimeout(state._aiTimer);
+  const correct=idx===q._corrShuf;
+  const timeBonus=Math.round((state.timeLeft/state.timerMax)*50);
+  const pts=correct?(100+timeBonus):0;
+  btn.classList.add(correct?'correct':'wrong');
+  // Show correct if wrong
+  const btns=document.querySelectorAll('.ans-btn');
+  btns.forEach((b,i)=>{b.disabled=true;if(!correct&&i===q._corrShuf)b.classList.add('correct');});
+  if(correct){
+    playTone('correct');
+    if(state.currentPlayer===1){state.p1.score+=pts;state.p1.correct++;state.p1.bonus+=timeBonus;state.roundP1.score+=pts;state.roundP1.correct++;state.roundP1.bonus+=timeBonus;}
+    else{state.p2.score+=pts;state.p2.correct++;state.p2.bonus+=timeBonus;state.roundP2.score+=pts;state.roundP2.correct++;state.roundP2.bonus+=timeBonus;}
+    if(!btn.classList.contains('shake'))btn.classList.add('bounce-in');
+  }else{
+    playTone('wrong');
+    btn.classList.add('shake');
+    if(state.currentPlayer===1){state.p1.wrong++;state.roundP1.wrong++;}
+    else{state.p2.wrong++;state.roundP2.wrong++;}
+  }
+  updateHUD();
+  showFeedback(correct,correct?'✓ Bonne réponse !':'✗ Mauvaise réponse',q.exp||'',pts);
+  scheduleNextQ();
+}
+
+function showFeedback(ok,title,desc,pts){
+  const panel=document.getElementById('feedbackPanel');
+  const icon=document.getElementById('feedbackIcon');
+  document.getElementById('feedbackTitle').textContent=title;
+  document.getElementById('feedbackTitle').style.color=ok?'var(--green)':'var(--red)';
+  document.getElementById('feedbackDesc').textContent=desc;
+  document.getElementById('pointsEarned').innerHTML=pts>0?`<div>+${pts}</div><div class="pts-label">points</div>`:`<div style="color:var(--muted)">+0</div><div class="pts-label">points</div>`;
+  icon.className='feedback-icon '+(ok?'ok':'ko');
+  icon.textContent=ok?'✓':'✗';
+  panel.classList.add('show');
+  panel.style.display='flex';
+}
+
+function scheduleNextQ(){
+  setTimeout(()=>{
+    state.currentPlayer=state.currentPlayer===1?2:1;
+    state.currentQIdx++;
+    if(state.currentQIdx>=state.themeQuestions.length){endRound();}
+    else{
+      // Show turn transition if local mode
+      if(state.mode==='local'){showTurnTransition(()=>loadQuestion());}
+      else{loadQuestion();}
+    }
+  },2200);
+}
+
+function showTurnTransition(cb){
+  const ov=document.getElementById('turnOverlay');
+  const p=state.currentPlayer===1?state.p1:state.p2;
+  document.getElementById('overlayAv').textContent=p.av;
+  document.getElementById('overlayTitle').textContent=`Tour de ${p.name}`;
+  document.getElementById('overlayTitle').style.color=state.currentPlayer===1?'var(--p1)':'var(--p2)';
+  const cd=document.getElementById('overlayCount');
+  ov.classList.add('active');
+  let c=3;cd.textContent=c;
+  const iv=setInterval(()=>{
+    c--;
+    if(c<=0){clearInterval(iv);ov.classList.remove('active');cb();}
+    else{cd.textContent=c;playTone('tick');}
+  },1000);
+}
+
+function updateHUD(){
+  document.getElementById('hud1av').textContent=state.p1.av;
+  document.getElementById('hud2av').textContent=state.p2.av;
+  document.getElementById('hud1name').textContent=state.p1.name;
+  document.getElementById('hud2name').textContent=state.p2.name;
+  document.getElementById('hud1score').textContent=state.p1.score;
+  document.getElementById('hud2score').textContent=state.p2.score;
+}
+
+// ==================== ROUND END ====================
+function endRound(){
+  clearInterval(state.timer);
+  const th=THEMES.find(t=>t.id===state.themes[state.currentThemeIdx]);
+  document.getElementById('roundThemeName').textContent=`${th.icon} ${th.name}`;
+  document.getElementById('roundAv1').textContent=state.p1.av;
+  document.getElementById('roundAv2').textContent=state.p2.av;
+  document.getElementById('roundName1').textContent=state.p1.name;
+  document.getElementById('roundName2').textContent=state.p2.name;
+  document.getElementById('roundScore1').textContent=state.roundP1.score;
+  document.getElementById('roundScore2').textContent=state.roundP2.score;
+
+  const mkStats=(r)=>`
+    <div class="stat-pill" style="background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.2)">✓ ${r.correct} correct</div>
+    <div class="stat-pill" style="background:rgba(239,68,68,.1);color:#fca5a5;border-color:rgba(239,68,68,.2)">✗ ${r.wrong} raté</div>
+    <div class="stat-pill" style="background:rgba(245,158,11,.1);color:#fbbf24;border-color:rgba(245,158,11,.2)">⚡ +${r.bonus} bonus</div>
+  `;
+  document.getElementById('roundStats1').innerHTML=mkStats(state.roundP1);
+  document.getElementById('roundStats2').innerHTML=mkStats(state.roundP2);
+
+  // Determine round winner
+  const b1=document.getElementById('roundBox1');
+  const b2=document.getElementById('roundBox2');
+  b1.className='round-player-box p1-b';b2.className='round-player-box p2-b';
+  let winnerBanner='';
+  if(state.roundP1.score>state.roundP2.score){
+    b1.className='round-player-box p1-b winner';
+    winnerBanner=`<div style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:10px 20px;display:inline-block"><span style="color:#a78bfa;font-weight:700">🏆 ${state.p1.name} remporte ce thème !</span></div>`;
+    playTone('win');confetti();
+  }else if(state.roundP2.score>state.roundP1.score){
+    b2.className='round-player-box p2-b winner';
+    winnerBanner=`<div style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);border-radius:10px;padding:10px 20px;display:inline-block"><span style="color:#67e8f9;font-weight:700">🏆 ${state.p2.name} remporte ce thème !</span></div>`;
+    playTone('win');confetti();
+  }else{
+    winnerBanner=`<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 20px;display:inline-block"><span style="color:#fbbf24;font-weight:700">🤝 Égalité parfaite !</span></div>`;
+  }
+  document.getElementById('roundWinnerBanner').innerHTML=winnerBanner;
+
+  const hasNext=state.currentThemeIdx+1<state.themes.length;
+  const nextBtn=document.getElementById('roundNextBtn');
+  const nextInfo=document.getElementById('roundNextInfo');
+  if(hasNext){
+    nextBtn.textContent='Prochain thème →';nextBtn.onclick=nextRound;
+    const nextTh=THEMES.find(t=>t.id===state.themes[state.currentThemeIdx+1]);
+    nextInfo.textContent=`Prochain : ${nextTh.icon} ${nextTh.name}`;
+  }else{
+    nextBtn.textContent='Voir les résultats finals 🏆';nextBtn.onclick=showFinal;
+    nextInfo.textContent='C\'est le dernier thème !';
+  }
+  showScreen('round');
+}
+
+function nextRound(){
+  state.currentThemeIdx++;
+  state.currentPlayer=1;
+  loadTheme();
+}
+
+// ==================== FINAL ====================
+function showFinal(){
+  playTone('win');confetti();setTimeout(confetti,500);setTimeout(confetti,1000);
+  const winner=state.p1.score>=state.p2.score?state.p1:state.p2;
+  const draw=state.p1.score===state.p2.score;
+  document.getElementById('championName').textContent=draw?'ÉGALITÉ !':(winner.name.toUpperCase());
+  document.getElementById('championScore').textContent=draw?`${state.p1.score} pts chacun`:`${winner.score} pts`;
+  document.getElementById('finalAv1').textContent=state.p1.av;
+  document.getElementById('finalAv2').textContent=state.p2.av;
+  document.getElementById('finalName1').textContent=state.p1.name;
+  document.getElementById('finalName2').textContent=state.p2.name;
+  document.getElementById('finalScore1').textContent=state.p1.score;
+  document.getElementById('finalScore2').textContent=state.p2.score;
+
+  const pct1=state.p1.correct+state.p1.wrong>0?Math.round(state.p1.correct/(state.p1.correct+state.p1.wrong)*100):0;
+  const pct2=state.p2.correct+state.p2.wrong>0?Math.round(state.p2.correct/(state.p2.correct+state.p2.wrong)*100):0;
+  document.getElementById('finalStats1').innerHTML=`<span style="color:#6ee7b7">✓ ${state.p1.correct}</span> / <span style="color:#fca5a5">✗ ${state.p1.wrong}</span> · <span style="color:#fbbf24">${pct1}%</span>`;
+  document.getElementById('finalStats2').innerHTML=`<span style="color:#6ee7b7">✓ ${state.p2.correct}</span> / <span style="color:#fca5a5">✗ ${state.p2.wrong}</span> · <span style="color:#fbbf24">${pct2}%</span>`;
+
+  const fc1=document.getElementById('finalCard1');
+  const fc2=document.getElementById('finalCard2');
+  fc1.className='final-player-card'+(state.p1.score>state.p2.score?' winner':'');
+  fc2.className='final-player-card'+(state.p2.score>state.p1.score?' winner':'');
+
+  // Save to leaderboard
+  saveLB();
+  showScreen('final');
+}
+
+function saveLB(){
+  const now=new Date().toLocaleDateString('fr-FR');
+  lb.push({name:state.p1.name,av:state.p1.av,score:state.p1.score,wins:state.p1.score>state.p2.score?1:0,date:now});
+  lb.push({name:state.p2.name,av:state.p2.av,score:state.p2.score,wins:state.p2.score>state.p1.score?1:0,date:now});
+  lb.sort((a,b)=>b.score-a.score);
+  lb=lb.slice(0,20);
+  localStorage.setItem('duelQuizLB',JSON.stringify(lb));
+}
+
+function renderLeaderboard(){
+  const tbody=document.getElementById('lbBody');
+  const empty=document.getElementById('lbEmpty');
+  if(!lb.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=lb.map((e,i)=>`<tr>
+    <td><span class="rank-badge ${i<3?'rank-'+(i+1):'rank-n'}">${i+1}</span></td>
+    <td>${e.av} ${e.name}</td>
+    <td style="font-family:'Orbitron',monospace;font-weight:700;color:var(--gold)">${e.score}</td>
+    <td>${e.wins?'🏆 Victoire':'—'}</td>
+    <td style="color:var(--muted);font-size:12px">${e.date}</td>
+  </tr>`).join('');
+}
+
+function rematch(){
+  state.currentThemeIdx=0;
+  state.currentPlayer=1;
+  state.p1.score=0;state.p1.correct=0;state.p1.wrong=0;state.p1.bonus=0;
+  state.p2.score=0;state.p2.correct=0;state.p2.wrong=0;state.p2.bonus=0;
+  state.themes=shuffle([...state.themes]);
+  loadTheme();
+}
+
+// Init
+buildAvatarGrids();
+</script>
+</body>
+</html>
